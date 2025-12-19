@@ -1,0 +1,39 @@
+{
+    "manifest_version": 3,
+    "name": "AI Subtitle Search (OpenSubtitles)",
+    "version": "2.0.1",
+    "description": "Automatically find and display subtitles for any video using OpenSubtitles.com REST API or AI.",
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "storage",
+        "webRequest"
+    ],
+    "host_permissions": [
+        "<all_urls>",
+        "https://api.opensubtitles.com/*",
+        "https://www.opensubtitles.com/*",
+        "https://api.openai.com/*"
+    ],
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "css": [
+                "style.css"
+            ],
+            "all_frames": true,
+            "run_at": "document_end"
+        }
+    ]
+}
