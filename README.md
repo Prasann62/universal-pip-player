@@ -20,11 +20,11 @@ This extension automatically finds and displays subtitles for videos using the O
 3. Click **Load unpacked**.
 4. Select the `online_subtitle_ex` folder.
 
-## 3. How to Test with JAV Websites
-1. Open any video-streaming website (e.g., JAV platforms).
+## 3. How to Test with 
+1. Open any video-streaming website .
 2. Ensure the video starts playing.
 3. Click the **AI Subtitle Search icon** in your Chrome toolbar.
-4. The extension will grab the video code (like `ABP-623`) from the page title.
+4. The extension will grab the video from the page title.
 5. Click **Search Subtitles**.
 6. If a match is found, it will automatically download and inject it into the player.
 
