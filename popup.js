@@ -34,10 +34,10 @@ async function init() {
         const found = await checkVideo();
         if (found) {
             clearInterval(interval);
-            updateStatus('Ready');
+            updateStatus('System Standby');
         } else if (attempts >= maxAttempts) {
             clearInterval(interval);
-            updateStatus('No video detected. Refresh page?', true);
+            updateStatus('Critical Error: Video Link Not Found', true);
         }
     }, 1000);
 }
@@ -87,7 +87,7 @@ elements.modeAi.addEventListener('click', () => {
     elements.modeAi.classList.add('active');
     elements.modeSearch.classList.remove('active');
     elements.aiSettings.classList.remove('hidden');
-    elements.findBtn.innerText = 'Start AI Mode';
+    elements.findBtn.innerText = 'Initialize Whisper Engine';
 });
 
 // Save API Key
@@ -113,7 +113,7 @@ elements.findBtn.addEventListener('click', async () => {
                 return updateStatus(response?.error || 'Unknown error', true);
             }
 
-            updateStatus('Subtitles found and injected! ✅');
+            updateStatus('Subtitles Synchronized ✅');
             chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
                 chrome.tabs.sendMessage(tab.id, { action: 'INJECT_SUBTITLE', content: response.content });
             });

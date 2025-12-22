@@ -76,6 +76,7 @@ class OpenAIClient {
         formData.append('file', blob, `audio.${ext}`);
         formData.append('model', 'whisper-1');
         formData.append('response_format', 'vtt');
+        formData.append('prompt', 'Transcribe the audio accurately as subtitles. Do not omit any words. Maintain correct punctuation and capitalization.');
 
         const response = await fetch(`${CONFIG.OPENAI_BASE_URL}/audio/transcriptions`, {
             method: 'POST',
@@ -124,48 +125,70 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // 2. Start AI Mode
     if (message.action === 'START_AI_MODE') {
         (async () => {
-            const storage = await chrome.storage.local.get(['openaiKey']);
-            if (!storage.openaiKey) {
-                sendResponse({ success: false, error: 'Set OpenAI Key first' });
-                return;
-            }
-            isCapturing = true;
+            try {
+                const storage = await chrome.storage.local.get(['openaiKey']);
+                if (!storage.openaiKey) {
+                    sendResponse({ success: false, error: 'Set OpenAI Key first' });
+                    return;
+                }
 
-            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            if (tab) {
-                chrome.tabs.sendMessage(tab.id, {
-                    action: 'START_RECORDING',
-                    apiKey: storage.openaiKey
+                const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+                if (!tab) return;
+
+                // 1. Get Video Time for sync
+                const videoMeta = await new Promise(r =>
+                    chrome.tabs.sendMessage(tab.id, { action: 'GET_VIDEO_METADATA' }, r)
+                );
+
+                // 2. Ensure Offscreen Document
+                await setupOffscreenDocument('offscreen.html');
+
+                // 3. Get Tab Stream ID
+                chrome.tabCapture.getMediaStreamId({ targetTabId: tab.id }, (streamId) => {
+                    chrome.runtime.sendMessage({
+                        target: 'offscreen',
+                        action: 'START_CAPTURE',
+                        streamId: streamId,
+                        videoTime: videoMeta?.currentTime || 0
+                    });
                 });
+
+                // 4. Notify content script to show status
+                chrome.tabs.sendMessage(tab.id, { action: 'AI_MODE_STARTED' });
+
+                isCapturing = true;
+                sendResponse({ success: true });
+            } catch (err) {
+                console.error(err);
+                sendResponse({ success: false, error: err.message });
             }
-            sendResponse({ success: true });
         })();
         return true;
     }
 
-    // 3. Process Audio Chunk
-    if (message.action === 'PROCESS_AUDIO_CHUNK') {
+    // 3. Process Audio Chunk (From Offscreen)
+    if (message.action === 'OFFSCREEN_CHUNK') {
         (async () => {
             try {
-                const { audioData, apiKey, offset } = message;
+                const storage = await chrome.storage.local.get(['openaiKey']);
+                const { data, offset } = message;
 
                 // Convert DataURL back to Blob
-                const res = await fetch(audioData);
+                const res = await fetch(data);
                 const blob = await res.blob();
 
-                const vttContent = await OpenAIClient.transcribe(blob, apiKey);
+                const vttContent = await OpenAIClient.transcribe(blob, storage.openaiKey);
 
-                if (sender.tab) {
-                    chrome.tabs.sendMessage(sender.tab.id, {
+                const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+                if (tab) {
+                    chrome.tabs.sendMessage(tab.id, {
                         action: 'UPDATE_AI_SUBTITLES',
                         content: vttContent,
                         offset: offset
                     });
                 }
-                sendResponse({ success: true });
             } catch (err) {
                 console.error('[Background] Transcription failed', err);
-                sendResponse({ success: false, error: err.message });
             }
         })();
         return true;
@@ -175,6 +198,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'STOP_AI_MODE') {
         isCapturing = false;
         (async () => {
+            chrome.runtime.sendMessage({ target: 'offscreen', action: 'STOP_CAPTURE' });
+            await closeOffscreenDocument();
+
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (tab) {
                 chrome.tabs.sendMessage(tab.id, { action: 'STOP_RECORDING' });
@@ -184,3 +210,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true;
     }
 });
+
+// --- Offscreen Management ---
+
+async function setupOffscreenDocument(path) {
+    const existingContexts = await chrome.runtime.getContexts({
+        contextTypes: ['OFFSCREEN_DOCUMENT'],
+        documentUrls: [chrome.runtime.getURL(path)]
+    });
+
+    if (existingContexts.length > 0) return;
+
+    await chrome.offscreen.createDocument({
+        url: path,
+        reasons: ['USER_MEDIA'],
+        justification: 'Capture tab audio for real-time transcription.'
+    });
+}
+
+async function closeOffscreenDocument() {
+    const existingContexts = await chrome.runtime.getContexts({
+        contextTypes: ['OFFSCREEN_DOCUMENT']
+    });
+
+    if (existingContexts.length > 0) {
+        await chrome.offscreen.closeDocument();
+    }
+}
