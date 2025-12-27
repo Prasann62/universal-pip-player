@@ -189,6 +189,39 @@
             gap: 8px;
             margin-top: 8px;
         }
+
+        .video-title-input {
+            width: 100%;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #eee;
+            font-size: 14px;
+            font-family: inherit;
+            padding: 8px;
+            border-radius: 8px;
+            margin-top: 4px;
+        }
+
+        .video-title-input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .save-btn {
+            background: #252529;
+            border: none;
+            color: white;
+            border-radius: 10px;
+            padding: 0 16px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+
+        .save-btn:hover {
+            background: #333;
+        }
     </style>
 </head>
 
@@ -206,7 +239,7 @@
 
         <div id="video-info" class="card hidden">
             <span class="label-sm">Live Context</span>
-            <div id="detected-title" class="video-title">Analyzing...</div>
+            <input type="text" id="manual-search-input" placeholder="Detected Title" class="video-title-input">
         </div>
 
         <div class="card">
@@ -216,12 +249,19 @@
                 <button id="mode-ai" class="mode-btn">AI Real-time</button>
             </div>
 
+            <div id="search-settings" class="input-group">
+                <span class="label-sm">OpenSubtitles Configuration</span>
+                <div class="flex-row">
+                    <input type="password" id="os-key-input" placeholder="OpenSubtitles API Key">
+                    <button id="save-os-btn" class="save-btn">Save</button>
+                </div>
+            </div>
+
             <div id="ai-settings" class="input-group hidden">
                 <span class="label-sm">OpenAI Configuration</span>
                 <div class="flex-row">
-                    <input type="password" id="openai-key-input" placeholder="Enter API Key">
-                    <button id="save-openai-btn"
-                        style="background: #252529; border: none; color: white; border-radius: 10px; padding: 0 16px; cursor: pointer;">Save</button>
+                    <input type="password" id="openai-key-input" placeholder="OpenAI API Key">
+                    <button id="save-openai-btn" class="save-btn">Save</button>
                 </div>
             </div>
         </div>

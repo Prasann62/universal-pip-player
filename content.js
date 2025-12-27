@@ -257,23 +257,49 @@ class SubtitleInjector {
 
 // Singleton
 const injector = new SubtitleInjector();
+window._aiSubtitleInjector = injector; // Expose for popup probing
+
+// Auto-check for video on load and mutations to support iframes detection
+function aggressiveVideoCheck() {
+    const v = injector.findVideo();
+    if (v) console.log('[Content] Video found in frame:', window.location.href);
+}
+
+// Check on load
+aggressiveVideoCheck();
+
+// Check on DOM mutations (for dynamic frameworks)
+const observer = new MutationObserver((mutations) => {
+    if (!injector.video) aggressiveVideoCheck();
+});
+observer.observe(document.body, { childList: true, subtree: true });
+
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     try {
         if (message.action === 'GET_VIDEO_METADATA') {
+            // If we don't have a video, return null so popup ignores this frame
+            if (!injector.findVideo()) {
+                sendResponse(null);
+                return;
+            }
             sendResponse(injector.getVideoMetadata());
         } else if (message.action === 'INJECT_SUBTITLE') {
             injector.injectSubtitle(message.content);
             sendResponse({ success: true });
         } else if (message.action === 'START_RECORDING' || message.action === 'AI_MODE_STARTED') {
-            injector.isListening = true;
-            injector.showTempMessage('🎙️ AI Mode: Listening...', true);
+            if (injector.video) {
+                injector.isListening = true;
+                injector.showTempMessage('🎙️ AI Mode: Listening...', true);
+            }
             sendResponse({ success: true });
         } else if (message.action === 'STOP_RECORDING') {
             injector.stopCapture();
             sendResponse({ success: true });
         } else if (message.action === 'UPDATE_AI_SUBTITLES') {
-            injector.injectSubtitle(message.content, message.offset);
+            if (injector.video) {
+                injector.injectSubtitle(message.content, message.offset);
+            }
             sendResponse({ success: true });
         }
     } catch (e) {

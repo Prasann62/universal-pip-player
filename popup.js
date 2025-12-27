@@ -1,27 +1,26 @@
-/**
- * popup.js
- * Handles UI interactions for Search and AI modes
- */
-
 const elements = {
     findBtn: document.getElementById('find-btn'),
     stopAiBtn: document.getElementById('stop-ai-btn'),
     status: document.getElementById('status'),
     videoInfo: document.getElementById('video-info'),
-    detectedTitle: document.getElementById('detected-title'),
+    manualSearchInput: document.getElementById('manual-search-input'),
     modeSearch: document.getElementById('mode-search'),
     modeAi: document.getElementById('mode-ai'),
     aiSettings: document.getElementById('ai-settings'),
+    searchSettings: document.getElementById('search-settings'),
     openaiInput: document.getElementById('openai-key-input'),
-    saveOpenaiBtn: document.getElementById('save-openai-btn')
+    saveOpenaiBtn: document.getElementById('save-openai-btn'),
+    osInput: document.getElementById('os-key-input'),
+    saveOsBtn: document.getElementById('save-os-btn')
 };
 
 let currentMeta = null;
 let currentMode = 'search';
 
 async function init() {
-    const data = await chrome.storage.local.get(['openaiKey']);
+    const data = await chrome.storage.sync.get(['openaiKey', 'osApiKey']);
     if (data.openaiKey) elements.openaiInput.value = data.openaiKey;
+    if (data.osApiKey) elements.osInput.value = data.osApiKey;
 
     updateStatus('Scanning for video...');
 
@@ -42,24 +41,42 @@ async function init() {
     }, 1000);
 }
 
+let currentFrameId = 0;
+
 async function checkVideo() {
     return new Promise((resolve) => {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
             if (!tabs[0] || !tabs[0].id) return resolve(false);
+            const tabId = tabs[0].id;
 
-            // Try/Catch for sendMessage in case content script isn't loaded
             try {
-                chrome.tabs.sendMessage(tabs[0].id, { action: 'GET_VIDEO_METADATA' }, (response) => {
-                    if (chrome.runtime.lastError || !response) {
-                        return resolve(false);
+                // Execute script in ALL frames to find which one has a video
+                const results = await chrome.scripting.executeScript({
+                    target: { tabId: tabId, allFrames: true },
+                    func: () => {
+                        const injector = window._aiSubtitleInjector;
+                        return injector && injector.findVideo() ? injector.getVideoMetadata() : null;
                     }
-                    currentMeta = response;
+                });
+
+                const match = results.find(r => r.result !== null);
+
+                if (match && match.result) {
+                    currentMeta = match.result;
+                    currentFrameId = match.frameId; // Store frame ID
+
                     elements.videoInfo.classList.remove('hidden');
-                    elements.detectedTitle.innerText = response.title || 'Unknown Video';
+                    // Pre-fill input but allow user edit
+                    if (!elements.manualSearchInput.value) {
+                        elements.manualSearchInput.value = match.result.title || 'Unknown Video';
+                    }
                     elements.findBtn.disabled = false;
                     resolve(true);
-                });
+                } else {
+                    resolve(false);
+                }
             } catch (e) {
+                console.error("Frame check failed", e);
                 resolve(false);
             }
         });
@@ -77,6 +94,7 @@ elements.modeSearch.addEventListener('click', () => {
     elements.modeSearch.classList.add('active');
     elements.modeAi.classList.remove('active');
     elements.aiSettings.classList.add('hidden');
+    elements.searchSettings.classList.remove('hidden');
     elements.findBtn.innerText = 'Search Subtitles';
     elements.findBtn.classList.remove('hidden');
     elements.stopAiBtn.classList.add('hidden');
@@ -87,27 +105,49 @@ elements.modeAi.addEventListener('click', () => {
     elements.modeAi.classList.add('active');
     elements.modeSearch.classList.remove('active');
     elements.aiSettings.classList.remove('hidden');
+    elements.searchSettings.classList.add('hidden');
     elements.findBtn.innerText = 'Initialize Whisper Engine';
 });
 
-// Save API Key
+// Save keys
 elements.saveOpenaiBtn.addEventListener('click', async () => {
     const key = elements.openaiInput.value.trim();
     if (key) {
-        await chrome.storage.local.set({ openaiKey: key });
+        await chrome.storage.sync.set({ openaiKey: key });
         updateStatus('OpenAI Key Saved! 🔒');
+        setTimeout(() => updateStatus('Ready'), 2000);
+    }
+});
+
+elements.saveOsBtn.addEventListener('click', async () => {
+    const key = elements.osInput.value.trim();
+    if (key) {
+        await chrome.storage.sync.set({ osApiKey: key });
+        updateStatus('OpenSubtitles Key Saved! 🔒');
         setTimeout(() => updateStatus('Ready'), 2000);
     }
 });
 
 // Start Button Logic
 elements.findBtn.addEventListener('click', async () => {
-    if (!currentMeta) return;
+    // Only block if no metadata AND empty search input
+    const searchQuery = elements.manualSearchInput.value.trim();
+    if (!currentMeta && !searchQuery) return;
 
     if (currentMode === 'search') {
+        const data = await chrome.storage.sync.get(['osApiKey']);
+        if (!data.osApiKey) return updateStatus('Set OpenSubtitles API Key first', true);
+
         elements.findBtn.disabled = true;
         updateStatus('Searching free databases...');
-        chrome.runtime.sendMessage({ action: 'SMART_PROCESS', params: { title: currentMeta.title } }, (response) => {
+
+        // Use manual input if available, else detected title
+        const query = searchQuery || currentMeta?.title;
+
+        chrome.runtime.sendMessage({
+            action: 'SMART_PROCESS',
+            params: { title: query }
+        }, (response) => {
             elements.findBtn.disabled = false;
             if (!response || !response.success) {
                 return updateStatus(response?.error || 'Unknown error', true);
@@ -115,12 +155,15 @@ elements.findBtn.addEventListener('click', async () => {
 
             updateStatus('Subtitles Synchronized ✅');
             chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
-                chrome.tabs.sendMessage(tab.id, { action: 'INJECT_SUBTITLE', content: response.content });
+                chrome.tabs.sendMessage(tab.id, {
+                    action: 'INJECT_SUBTITLE',
+                    content: response.content
+                }, { frameId: currentFrameId }); // Target the specific frame
             });
         });
     } else {
         // AI Mode
-        const data = await chrome.storage.local.get(['openaiKey']);
+        const data = await chrome.storage.sync.get(['openaiKey']);
         if (!data.openaiKey) return updateStatus('Set OpenAI Key first', true);
 
         elements.findBtn.classList.add('hidden');
