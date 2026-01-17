@@ -6,156 +6,164 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NextSub AI</title>
     <link rel="stylesheet" href="popup.css">
-    <!-- Preload Font for speed -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
+    <div class="app-background">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
     <div class="app-shell">
         <header>
-            <div class="logo-container">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
+            <div class="brand">
+                <div class="logo-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>NextSub</h1>
+                    <span class="badge-pro">AI PRO</span>
+                </div>
             </div>
-            <h1>NextSub AI</h1>
-            <span class="version-badge">v2.1</span>
+            <div class="header-actions">
+                <button class="icon-btn" id="settings-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                </button>
+            </div>
         </header>
 
-        <!-- Live Detection Card -->
-        <div id="video-info" class="card hidden">
-            <div class="card-header">
-                <span class="label-sm">🎬 Detected Media</span>
-                <span class="detection-badge">
-                    <span class="pulse-dot"></span>
-                    Live
-                </span>
-            </div>
-            <input type="text" id="manual-search-input" placeholder="Enter movie/video title..."
-                class="video-title-input">
-        </div>
-
-        <!-- Main Controls -->
-        <div class="card">
-            <span class="label-sm">⚙️ Engine Mode</span>
-            <div class="mode-selector">
-                <button id="mode-search" class="mode-btn active">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.35-4.35"></path>
-                    </svg>
-                    Auto Search
-                </button>
-                <button id="mode-ai" class="mode-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
-                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                        <line x1="12" x2="12" y1="19" y2="22"></line>
-                    </svg>
-                    AI Live
-                </button>
-            </div>
-
-            <!-- Auto Search Settings -->
-            <div id="search-settings" class="settings-panel">
-                <div class="setting-row">
-                    <span class="setting-label">Database</span>
-                    <span class="setting-value">YIFY / YTS</span>
+        <main>
+            <!-- Media Status -->
+            <div class="status-card glow-card">
+                <div class="status-indicator">
+                    <span class="pulse-ring"></span>
+                    <span class="status-dot"></span>
                 </div>
-                <div class="setting-row">
-                    <span class="setting-label">Language</span>
-                    <select id="language-select" class="language-dropdown">
-                        <option value="en">English</option>
-                        <option value="es">Spanish</option>
-                        <option value="pt">Portuguese</option>
-                        <option value="fr">French</option>
-                        <option value="de">German</option>
-                        <option value="it">Italian</option>
-                        <option value="ar">Arabic</option>
-                        <option value="hi">Hindi</option>
-                    </select>
+                <div class="status-content">
+                    <span class="status-label">Active Media</span>
+                    <span class="status-value" id="media-status-text">Scanning page...</span>
                 </div>
             </div>
 
-            <!-- AI Settings -->
-            <div id="ai-settings" class="settings-panel hidden">
-                <div class="setting-row">
-                    <span class="setting-label">Engine</span>
-                    <span class="setting-value ai-engine">
-                        <span class="ai-dot"></span>
-                        Whisper (Local)
+            <!-- Mode Switcher -->
+            <div class="mode-switch-container">
+                <button id="mode-search" class="mode-tab active" data-mode="search">
+                    <span>Database</span>
+                </button>
+                <button id="mode-ai" class="mode-tab" data-mode="ai">
+                    <span>AI Live</span>
+                </button>
+                <div class="tab-glider"></div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-viewport">
+                <!-- Search View -->
+                <div id="view-search" class="view-section active">
+                    <div class="input-group">
+                        <input type="text" id="manual-search-input" placeholder="Search movie or show...">
+                        <div class="input-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="controls-row">
+                        <select id="language-select" class="glass-select">
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                            <option value="pt">Portuguese</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                            <option value="it">Italian</option>
+                            <option value="hi">Hindi</option>
+                        </select>
+                        <div class="provider-badge">YTS</div>
+                    </div>
+                </div>
+
+                <!-- AI View -->
+                <div id="view-ai" class="view-section">
+                    <div class="ai-status-display">
+                        <div class="waveform">
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                        </div>
+                        <span class="ai-state-text">Ready to listen</span>
+                    </div>
+                    <div class="controls-row">
+                        <div class="info-badge">
+                            <span>Model: Whisper Tiny</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sync Controls -->
+            <div class="sync-panel">
+                <span class="panel-label">Sync Offset</span>
+                <div class="sync-grid">
+                    <button id="sync-minus" class="glass-btn small">-0.5s</button>
+                    <div class="sync-display">
+                        <span id="sync-value">0.0s</span>
+                    </div>
+                    <button id="sync-plus" class="glass-btn small">+0.5s</button>
+                </div>
+            </div>
+
+            <!-- Global Action Container -->
+            <div class="action-container">
+                <button id="find-btn" class="cta-btn primary">
+                    <span class="btn-content">
+                        <span class="icon">⚡</span>
+                        <span>Find Subtitles</span>
                     </span>
-                </div>
-                <div class="setting-row">
-                    <span class="setting-label">Model</span>
-                    <span class="setting-value">Tiny (39MB)</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Subtitle Sync Controls -->
-        <div class="card sync-card">
-            <span class="label-sm">⏱️ Subtitle Sync</span>
-            <div class="sync-controls">
-                <button id="sync-minus" class="sync-btn" title="Delay subtitles (↓ or -)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    <span>-0.5s</span>
+                    <div class="btn-glow"></div>
                 </button>
-                <div class="sync-display">
-                    <span id="sync-value">0.0s</span>
-                </div>
-                <button id="sync-plus" class="sync-btn" title="Speed up subtitles (↑ or +)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    <span>+0.5s</span>
+
+                <button id="stop-ai-btn" class="cta-btn danger hidden">
+                    <span class="btn-content">
+                        <span class="icon">⏹</span>
+                        <span>Stop AI</span>
+                    </span>
+                </button>
+
+                <button id="miniplay-btn" class="cta-btn secondary">
+                    <span class="btn-content">
+                        <span class="icon">📺</span>
+                        <span>Miniplayer</span>
+                    </span>
                 </button>
             </div>
-        </div>
 
-        <!-- Recent Searches -->
-        <div id="recent-searches" class="card recent-card hidden">
-            <div class="card-header">
-                <span class="label-sm">🕓 Recent</span>
-                <button id="clear-history" class="clear-btn">Clear</button>
+        </main>
+
+        <!-- Status Footer -->
+        <footer>
+            <div id="status" class="toast-capsule hidden">
+                <span id="toast-icon">✨</span>
+                <span id="toast-message">Ready</span>
             </div>
-            <div id="recent-list" class="recent-list">
-                <!-- Filled by JS -->
-            </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <button id="find-btn" class="btn-primary">
-            <span class="btn-icon">🔍</span>
-            <span class="btn-text">Search Subtitles</span>
-            <div class="btn-loader hidden">
-                <div class="spinner"></div>
-            </div>
-        </button>
-        <button id="stop-ai-btn" class="btn-primary btn-danger hidden">
-            <span>⏹️</span> Stop Listening
-        </button>
-        <button id="miniplay-btn" class="btn-secondary" style="margin-top: 10px;">
-            <span class="btn-icon">📺</span>
-            <span class="btn-text">Start Miniplay</span>
-        </button>
-
-        <!-- Status with Toast -->
-        <div id="status" class="status-bar">
-            <span class="status-icon">✨</span>
-            <span class="status-text">Ready to caption</span>
-        </div>
-
-        <!-- Toast Container -->
-        <div id="toast-container"></div>
+        </footer>
     </div>
+
     <script src="popup.js"></script>
 </body>
 
