@@ -570,3 +570,46 @@ input[type="text"]:focus {
 .hidden {
     display: none !important;
 }
+
+/* Entrance Animations */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.app-shell>header {
+    animation: slideInUp 0.4s ease-out forwards;
+}
+
+.app-shell>main>.status-card {
+    animation: slideInUp 0.4s ease-out 0.1s forwards;
+    opacity: 0;
+    /* Star hidden for delay */
+}
+
+.app-shell>main>.mode-switch-container {
+    animation: slideInUp 0.4s ease-out 0.2s forwards;
+    opacity: 0;
+}
+
+.app-shell>main>.content-viewport {
+    animation: slideInUp 0.4s ease-out 0.3s forwards;
+    opacity: 0;
+}
+
+.app-shell>main>.sync-panel {
+    animation: slideInUp 0.4s ease-out 0.4s forwards;
+    opacity: 0;
+}
+
+.app-shell>main>.action-container {
+    animation: slideInUp 0.4s ease-out 0.5s forwards;
+    opacity: 0;
+}
