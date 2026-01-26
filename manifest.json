@@ -1,11 +1,14 @@
 {
     "manifest_version": 3,
-    "name": "Brave Mini Player",
-    "version": "1.0.0",
-    "description": "Premium Mini Player and Picture-in-Picture for any website video. Focused on privacy and performance.",
+    "name": "Mini Player & PiP",
+    "version": "1.0",
+    "description": "Mini player and Picture-in-Picture for any website",
     "permissions": [
         "scripting",
-        "storage"
+        "activeTab"
+    ],
+    "host_permissions": [
+        "<all_urls>"
     ],
     "action": {
         "default_popup": "popup.html"
@@ -16,15 +19,8 @@
                 "<all_urls>"
             ],
             "js": [
-                "pipController.js",
-                "miniPlayer.js",
                 "content.js"
-            ],
-            "all_frames": true,
-            "run_at": "document_end"
+            ]
         }
-    ],
-    "content_security_policy": {
-        "extension_pages": "script-src 'self'; object-src 'self'"
-    }
+    ]
 }
