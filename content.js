@@ -15,16 +15,7 @@ function enablePiP(video) {
         }
     });
 
-    // AUTO PiP when video starts playing
-    video.addEventListener("play", async () => {
-        if (!document.pictureInPictureElement) {
-            try {
-                await video.requestPictureInPicture();
-            } catch (e) {
-                // Brave blocks if no user gesture — SAFE TO IGNORE
-            }
-        }
-    });
+
 }
 
 // Detect existing videos
