@@ -175,29 +175,6 @@ window.addEventListener("keydown", (e) => {
                 showToast("Paused ⏸️");
             }
             break;
-        case "p":
-            if (e.altKey) {
-                e.preventDefault();
-                (async () => {
-                    // Try Document PiP first
-                    if (typeof requestDocumentPiP === 'function') {
-                        const success = await requestDocumentPiP(video);
-                        if (success) return;
-                    }
-
-                    // Fallback to native PiP
-                    try {
-                        if (document.pictureInPictureElement) {
-                            await document.exitPictureInPicture();
-                        } else {
-                            await video.requestPictureInPicture();
-                        }
-                    } catch (err) {
-                        console.error("PiP failed:", err);
-                    }
-                })();
-            }
-            break;
         case "arrowleft":
             video.currentTime = Math.max(0, video.currentTime - 5);
             showToast("Rewind 5s ⏪");
