@@ -40,5 +40,15 @@
                 "content.js"
             ]
         }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "pip.webp"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
     ]
 }

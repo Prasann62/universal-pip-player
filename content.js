@@ -196,9 +196,7 @@ function injectYouTubeButton(video, controls) {
     }
 
     button.innerHTML = `
-        <svg viewBox="0 0 36 36" width="100%" height="100%">
-            <path d="M25,17 L17,17 L17,23 L25,23 L25,17 Z M29,25 L29,10.98 C29,9.88 28.1,9 27,9 L9,9 C7.9,9 7,9.88 7,10.98 L7,25 C7,26.1 7.9,27 9,27 L27,27 C28.1,27 29,26.1 29,25 Z M27,25 L9,25 L9,10.98 L27,10.98 L27,25 Z" fill="#fff"></path>
-        </svg>
+        <img src="${chrome.runtime.getURL("pip.webp")}" style="width: 100%; height: 100%; object-fit: contain; padding: 8px;">
     `;
 
     button.onclick = async (e) => {
