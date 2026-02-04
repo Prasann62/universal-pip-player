@@ -1,9 +1,8 @@
-# 🪟 Brave PiP Player
+# 🪟 Stitch PiP Extension
 
-A lightweight **Brave / Chromium browser extension** that enables  
-**Mini Player** and **Picture-in-Picture (PiP)** for videos on **any website**.
+A powerful **Brave / Chromium browser extension** that enables **Mini Player** and **Picture-in-Picture (PiP)** for videos on **any website**.
 
-Built to be **fast, privacy-friendly, and Brave-safe**.
+Built to be **fast, privacy-friendly, and highly configurable**.
 
 ---
 
@@ -11,129 +10,89 @@ Built to be **fast, privacy-friendly, and Brave-safe**.
 
 - 🎥 **Picture-in-Picture (PiP)**
   - Native Chromium PiP API
+  - **New:** Document PiP Support (Custom controls overlay)
   - Works on most HTML5 video websites
-  - Floating window above all applications
 
-- 🪟 **Mini Player Mode**
-  - Floating video inside the webpage
-  - Draggable and resizable
+- 🪟 **Robust Mini Player (Fallback)**
+  - Floating video mode for sites that block native PiP
+  - Resizable (Small, Medium, Large)
   - Stays visible while scrolling
 
-- 🖱️ **Multiple Controls**
-  - Double-click on video → Toggle PiP
-  - Extension popup button → Toggle PiP
-  - Auto-detects playing videos
-  - 🔄 **Shorts Navigation in PiP**: Navigate YouTube Shorts and Instagram Reels directly inside PiP using Next/Previous controls.
+- ⌨️ **Keyboard Shortcuts**
+  - `Alt + P`: Toggle PiP
+  - `Alt + X`: Close PiP
+  - `Space`: Play/Pause
+  - `M`: Mute/Unmute
+  - `Arrow Keys`: Seek / Volume (in Document PiP)
+
+- 🎨 **Customization**
+  - **Dark/Light Theme** support
+  - Configurable Mini-Player size
+  - Settings persist across sessions
 
 - 🦁 **Brave Optimized**
-  - No tracking
-  - No analytics
-  - No external requests
-  - Respects Brave Shields & privacy rules
+  - No tracking / analytics
+  - 100% local execution
 
 ---
 
 ## 🚀 How It Works
 
-1. Detects `<video>` elements on the page  
-2. Listens for user interaction (Brave requirement)  
-3. Uses native:
-   ```js
-   video.requestPictureInPicture()
-Falls back safely if PiP is blocked
+1. Detects `<video>` elements on the page.
+2. Injects a smart "PiP" button on YouTube player controls.
+3. Allows toggling via Extension Popup or Keyboard Shortcuts.
+4. Intelligently falls back to a "Floating Mode" if native PiP is unavailable.
 
-📂 Project Structure
-brave-pip-player/
+### 📂 Project Structure
+
+```
+stitch-pip-extension/
 │
 ├── manifest.json        # Manifest V3 (Brave / Chrome)
-├── content.js           # Video detection + auto PiP
-├── popup.html           # Extension UI
-├── popup.js             # Manual PiP trigger
+├── content/             # Modular Content Scripts
+│   ├── utils.js         # Helpers
+│   ├── pip.js           # Core PiP Logic
+│   ├── ui.js            # UI Injection (Buttons, Tooltips)
+│   ├── controls.js      # Keyboard & Event Listeners
+│   └── main.js          # Entry Point
+├── popup.html           # Extension Popup UI
+├── popup.js             # Popup Logic
+├── background.js        # Background Service Worker
 ├── README.md            # Documentation
-└── LICENSE              # Open-source license
+└── CONTRIBUTING.md      # Contribution Guidelines
+```
 
-🛠 Installation (Brave Browser)
+## 🛠 Installation
 
-Open Brave
+1. Open **Brave** or **Chrome**.
+2. Go to `chrome://extensions/`.
+3. Enable **Developer mode** (top right).
+4. Click **Load unpacked**.
+5. Select the project folder.
 
-Go to brave://extensions
+## 🧪 Testing
 
-Enable Developer mode
+This project uses Jest for unit testing.
+```bash
+npm install
+npm test
+```
 
-Click Load unpacked
+## 📌 Roadmap
 
-Select the project folder
+- [x] Keyboard shortcuts (`Alt+P`, `Alt+X`)
+- [x] UI Theme Toggle (Dark/Light)
+- [x] Advanced Fallback (Floating Window)
+- [x] Configurable Player Size
+- [ ] Brave Store release
+- [ ] Multi-language support
 
-Done ✅
-🧪 How to Use
-Option 1 — Auto PiP
+## 🤝 Contributing
 
-Play any video
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
-PiP will attempt automatically (if allowed)
+## 📜 License
 
-Option 2 — Manual PiP
-
-Click the extension icon
-
-Press Toggle Picture-in-Picture
-
-Option 3 — Double-Click
-
-Double-click on any video to toggle PiP
-🔒 Privacy
-
-❌ No tracking
-
-❌ No ads
-
-❌ No analytics
-
-❌ No data collection
-
-✅ 100% local execution
-
-🧠 Tech Stack
-
-JavaScript (Vanilla)
-
-Chromium PiP API
-
-Manifest V3
-
-MutationObserver
-
-📌 Roadmap (Optional)
-
-⌨️ Keyboard shortcuts
-
-🎨 UI theme toggle
-
-🪟 Advanced mini-player controls
-
-🏪 Brave Store release
-
-🤝 Contributing
-
-Pull requests are welcome.
-For major changes, please open an issue first.
-
-📜 License
-
-This project is licensed under the MIT License.
-See the LICENSE file for details.
-
-⭐ Support
-
-If this project helped you:
-
-⭐ Star the repo
-
-🐛 Report issues
-
-🚀 Share ideas
-Built with ❤️ for Brave users.
+MIT License.
 
 ---
-
-

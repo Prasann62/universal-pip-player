@@ -5,7 +5,8 @@
   "main": "background.js",
   "scripts": {
     "build": "npx tailwindcss -i ./input.css -o ./popup.css",
-    "watch": "npx tailwindcss -i ./input.css -o ./popup.css --watch"
+    "watch": "npx tailwindcss -i ./input.css -o ./popup.css --watch",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -21,6 +22,7 @@
   "homepage": "https://github.com/Prasann62/onlinesubtitleextenction#readme",
   "devDependencies": {
     "autoprefixer": "^10.4.23",
+    "jest": "^30.2.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.19"
   }
