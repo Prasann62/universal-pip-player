@@ -3,56 +3,56 @@
     "name": "Mini Player & PiP",
     "version": "1.0",
     "description": "Mini player and Picture-in-Picture for any website",
-    "permissions": [
-        "scripting",
-        "activeTab",
-        "contextMenus"
-    ],
-    "host_permissions": [
-        "<all_urls>"
-    ],
-    "action": {
-        "default_popup": "popup.html"
-    },
-    "background": {
-        "service_worker": "background.js"
-    },
-    "commands": {
-        "toggle-pip": {
-            "suggested_key": {
-                "default": "Alt+P"
-            },
-            "description": "Toggle Picture-in-Picture"
+    "scripting",
+    "activeTab",
+    "contextMenus",
+    "storage"
+],
+"host_permissions": [
+    "<all_urls>"
+],
+"action": {
+    "default_popup": "popup.html"
+},
+"background": {
+    "service_worker": "background.js"
+},
+"commands": {
+    "toggle-pip": {
+        "suggested_key": {
+            "default": "Alt+P"
         },
-        "close-pip": {
-            "suggested_key": {
-                "default": "Alt+X"
-            },
-            "description": "Close Picture-in-Picture"
-        }
+        "description": "Toggle Picture-in-Picture"
     },
-    "content_scripts": [
-        {
-            "matches": [
-                "<all_urls>"
-            ],
-            "js": [
-                "content/utils.js",
-                "content/pip.js",
-                "content/ui.js",
-                "content/controls.js",
-                "content/main.js"
-            ]
-        }
-    ],
-    "web_accessible_resources": [
-        {
-            "resources": [
-                "pip.webp"
-            ],
-            "matches": [
-                "<all_urls>"
-            ]
-        }
-    ]
+    "close-pip": {
+        "suggested_key": {
+            "default": "Alt+X"
+        },
+        "description": "Close Picture-in-Picture"
+    }
+},
+"content_scripts": [
+    {
+        "matches": [
+            "<all_urls>"
+        ],
+        "js": [
+            "content/utils.js",
+            "content/pip.js",
+            "content/ui.js",
+            "content/controls.js",
+            "content/main.js"
+        ]
+    }
+],
+"web_accessible_resources": [
+    {
+        "resources": [
+            "pip.webp"
+        ],
+        "matches": [
+            "<all_urls>"
+        ]
+    }
+]
 }
