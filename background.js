@@ -26,46 +26,16 @@ chrome.commands.onCommand.addListener((command) => {
 });
 
 function closePiP(tabId) {
-    chrome.scripting.executeScript({
-        target: { tabId: tabId },
-        func: async () => {
-            if (document.pictureInPictureElement) {
-                await document.exitPictureInPicture();
-            }
-            // If Document PiP is active, we need to close that window as well
-            // This will be handled in content.js via a message or global state
-            window.postMessage({ type: "CLOSE_PIP" }, "*");
-        }
+    chrome.tabs.sendMessage(tabId, { type: "CLOSE_PIP" }).catch(() => {
+        // If content script not ready or error
     });
 }
 
 function triggerPiP(tabId) {
-    chrome.scripting.executeScript({
-        target: { tabId: tabId },
-        func: async () => {
-            const video = document.querySelector("video");
-            if (!video) {
-                alert("No video found on this page");
-                return;
-            }
-
-            // Try Document PiP first (Phase 3)
-            if (typeof requestDocumentPiP === 'function') {
-                const success = await requestDocumentPiP(video);
-                if (success) return;
-            }
-
-            // Fallback to native PiP
-            try {
-                if (document.pictureInPictureElement) {
-                    await document.exitPictureInPicture();
-                } else {
-                    await video.requestPictureInPicture();
-                }
-            } catch (e) {
-                console.error("PiP failed:", e);
-            }
-        }
+    chrome.tabs.sendMessage(tabId, { type: "TOGGLE_PIP" }).catch((err) => {
+        // Fallback or ignore if script not ready
+        console.log("Could not send message to tab (styles/scripts might not be loaded):", err);
+        // Optionally inject scripts if missing (advanced) but simplified for now
     });
 }
 
