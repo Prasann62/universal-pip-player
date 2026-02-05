@@ -287,4 +287,35 @@ function disableFloatingMode(video) {
     }
 }
 
+// ==========================================
+// MESSAGE LISTENER
+// ==========================================
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.type === "UPDATE_SIZE") {
+        updateFloatingSize(request.size);
+        window.postMessage({ type: "UPDATE_SIZE", size: request.size }, "*");
+    }
+});
+
+function updateFloatingSize(sizeMode) {
+    // 1. Handle Floating Mode (Fallback)
+    const activeVideo = document.querySelector("video[data-is-floating='true']");
+    if (activeVideo) {
+        let width = "400px";
+        let height = "225px";
+
+        if (sizeMode === "small") { width = "300px"; height = "169px"; }
+        else if (sizeMode === "large") { width = "500px"; height = "281px"; }
+
+        activeVideo.style.width = width;
+        activeVideo.style.height = height;
+
+        // Update close button position
+        if (floatCloseBtn) {
+            const hVal = parseInt(height.replace("px", ""));
+            floatCloseBtn.style.bottom = (20 + hVal - 12) + "px";
+        }
+    }
+}
+
 

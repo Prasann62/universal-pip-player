@@ -43,7 +43,18 @@ sizeChips.forEach(chip => {
         sizeChips.forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
         chrome.storage.local.set({ playerSize: chip.dataset.size });
-        // TODO: Send message to update live player if needed?
+
+        // Send message to update live player
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs[0]) {
+                chrome.tabs.sendMessage(tabs[0].id, {
+                    type: "UPDATE_SIZE",
+                    size: chip.dataset.size
+                }).catch(() => {
+                    // Ignore errors if content script isn't ready
+                });
+            }
+        });
     });
 });
 
