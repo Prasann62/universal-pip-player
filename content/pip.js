@@ -2,6 +2,8 @@
 // PICTURE-IN-PICTURE CORE LOGIC
 // ==========================================
 
+let activePipWindow = null;
+
 async function requestDocumentPiP(video) {
     if (!('documentPictureInPicture' in window)) return false;
 
@@ -15,6 +17,8 @@ async function requestDocumentPiP(video) {
             width: video.videoWidth || 640,
             height: video.videoHeight || 360,
         });
+
+        activePipWindow = pipWindow;
 
         // Style the PiP window
         pipWindow.document.body.style.margin = "0";
@@ -68,6 +72,8 @@ async function requestDocumentPiP(video) {
 
         // Restore video on close
         pipWindow.addEventListener("pagehide", () => {
+            activePipWindow = null;
+
             // Restore original styles
             if (originalStyle) {
                 video.setAttribute("style", originalStyle);
@@ -293,9 +299,32 @@ function disableFloatingMode(video) {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === "UPDATE_SIZE") {
         updateFloatingSize(request.size);
+        updateDocumentPipSize(request.size);
         window.postMessage({ type: "UPDATE_SIZE", size: request.size }, "*");
     }
 });
+
+function updateDocumentPipSize(sizeMode) {
+    if (!activePipWindow) return;
+
+    let width = 400;
+    let height = 225;
+
+    // Dimensions need to match the ones in popup/floating logic for consistency
+    // Note: window.resizeTo includes window decorations, but for Document PiP 
+    // it usually resizes the content area or the whole window depending on OS/Browser.
+    // We'll stick to inner content sizes if possible, but resizeTo is for outer.
+    // Let's use the same values as floating for now.
+
+    if (sizeMode === "small") { width = 300; height = 169; }
+    else if (sizeMode === "large") { width = 500; height = 281; }
+
+    try {
+        activePipWindow.resizeTo(width + 20, height + 40); // Adding some padding for borders/chrome if needed
+    } catch (e) {
+        console.warn("Could not resize Document PiP window", e);
+    }
+}
 
 function updateFloatingSize(sizeMode) {
     // 1. Handle Floating Mode (Fallback)
