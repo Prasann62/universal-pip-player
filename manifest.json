@@ -66,6 +66,14 @@
             "matches": [
                 "<all_urls>"
             ]
+        },
+        {
+            "resources": [
+                "stitch.css"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
         }
     ]
 }

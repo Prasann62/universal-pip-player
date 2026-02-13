@@ -3,6 +3,42 @@
 // ==========================================
 
 // 🚀 Robust YouTube Button Injection
+function getStitchStyles() {
+    return `
+        :root {
+            --void-bg: #050505;
+            --glass-surface: rgba(20, 20, 20, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --neon-cyan: #00f3ff;
+            --neon-purple: #bc13fe;
+            --text-primary: #ffffff;
+            --text-muted: #888888;
+            --danger: #ff2a6d;
+            --success: #05ffa1;
+            --glow-cyan: 0 0 10px rgba(0, 243, 255, 0.5);
+            --glow-purple: 0 0 15px rgba(188, 19, 254, 0.4);
+            --backdrop-blur: blur(12px);
+        }
+        .stitch-btn-icon {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .stitch-btn-icon:hover {
+            color: var(--neon-cyan);
+            background: rgba(0, 243, 255, 0.1);
+            box-shadow: var(--glow-cyan);
+        }
+    `;
+}
+
 function handleYouTubeInjection() {
     if (!location.href.includes("youtube.com")) return;
 
