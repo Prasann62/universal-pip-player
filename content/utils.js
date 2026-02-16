@@ -165,6 +165,28 @@ function showToast(message, type = 'info', duration = 2000) {
 // ==========================================
 
 /**
+ * Recursively find all video elements, including those in Shadow DOMs
+ * @param {Node} root - Root node to start search from
+ * @param {Array} videos - Accumulator array
+ * @returns {Array} Array of video elements
+ */
+function findAllVideosInShadow(root = document, videos = []) {
+    // 1. Add videos from current root
+    const currentVideos = Array.from(root.querySelectorAll('video'));
+    videos.push(...currentVideos);
+
+    // 2. Find all elements with shadowRoots
+    const shadowHosts = Array.from(root.querySelectorAll('*')).filter(el => el.shadowRoot);
+
+    // 3. Recurse into each shadowRoot
+    shadowHosts.forEach(host => {
+        findAllVideosInShadow(host.shadowRoot, videos);
+    });
+
+    return videos;
+}
+
+/**
  * Check if a video element is visible and significant (not a thumbnail)
  * @param {HTMLVideoElement} video - Video element to check
  * @returns {boolean} True if video is significant
@@ -184,11 +206,15 @@ function isSignificantVideo(video) {
 }
 
 /**
- * Find the most relevant video on the page
+ * Find the most relevant video on the page, searching deep into Shadow DOMs
  * @returns {HTMLVideoElement|null} Most relevant video element
  */
 function findPrimaryVideo() {
-    const videos = Array.from(document.querySelectorAll('video')).filter(isSignificantVideo);
+    // Use the deep search helper
+    const allVideos = findAllVideosInShadow(document);
+
+    // Filter for significant videos
+    const videos = allVideos.filter(isSignificantVideo);
 
     if (videos.length === 0) return null;
     if (videos.length === 1) return videos[0];

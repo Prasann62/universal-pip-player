@@ -53,11 +53,92 @@ function injectYouTubeButton(video, controls) {
     };
 
     // Insert safely next to the settings button
+    // Insert safely next to the settings button
     const settingsBtn = controls.querySelector(".ytp-settings-button");
     if (settingsBtn) {
         settingsBtn.insertAdjacentElement('beforebegin', button);
     } else {
         controls.prepend(button);
+    }
+}
+
+// 🚀 JioCinema Button Injection
+function handleJioCinemaInjection() {
+    if (!location.href.includes("jiocinema.com")) return;
+
+    // Use the deep search to find the video first
+    const video = typeof findPrimaryVideo === 'function' ? findPrimaryVideo() : document.querySelector("video");
+    if (!video) return;
+
+    // JioCinema controls often don't have stable classes. 
+    // We look for the parent container of the video, then find the controls layer.
+    // Usually controls are siblings or overlay children.
+
+    // Strategy: Look for a container that likely holds buttons (svgs/images) near the bottom
+    // This is heuristics-based since classes change.
+
+    const root = video.getRootNode(); // Could be ShadowRoot
+
+    // Attempt 1: Look for common control wrappers in Shadow DOM or near video
+    // This selector targets typical player control bars (often flex/grid with buttons)
+    let controls = null;
+
+    if (root instanceof ShadowRoot || root === document) {
+        // Try to find a bottom bar. Typically has "controls" or "bottom" in class, 
+        // or contains the volume/fullscreen buttons.
+        const candidates = Array.from(root.querySelectorAll('div'));
+
+        // Find a container that is positioned absolute/fixed at bottom and has buttons
+        controls = candidates.find(el => {
+            const style = window.getComputedStyle(el);
+            const isBottom = style.bottom === '0px' || (parseInt(style.bottom) < 50 && style.position === 'absolute');
+            const hasButtons = el.querySelectorAll('button, [role="button"]').length > 3;
+            return isBottom && hasButtons && el.clientHeight < 100;
+        });
+    }
+
+    if (controls && !controls.querySelector(".pip-jio-button")) {
+        injectJioCinemaButton(video, controls);
+    }
+}
+
+function injectJioCinemaButton(video, controls) {
+    const button = document.createElement("button");
+    button.className = "pip-jio-button";
+    button.title = "Picture-in-Picture (Alt+P)";
+    button.style.cssText = `
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        width: 40px; 
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+    `;
+
+    button.innerHTML = `
+        <img src="${chrome.runtime.getURL("pip.webp")}" style="width: 24px; height: 24px; object-fit: contain; filter: invert(1);">
+    `;
+
+    button.onclick = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof togglePiP === 'function') {
+            togglePiP();
+        }
+    };
+
+    // Try to insert before the fullscreen button (usually the last button)
+    // We guess the fullscreen button is the last one or close to right
+    const buttons = controls.querySelectorAll('button, [role="button"]');
+    if (buttons.length > 0) {
+        // Insert before the last button (usually fullscreen)
+        const lastBtn = buttons[buttons.length - 1];
+        lastBtn.insertAdjacentElement('beforebegin', button);
+    } else {
+        controls.appendChild(button);
     }
 }
 

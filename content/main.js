@@ -34,8 +34,13 @@ observer.observe(document.body, {
 });
 
 // Initial check for YouTube
+// Initial check for YouTube & JioCinema
 handleYouTubeInjection();
+if (typeof handleJioCinemaInjection === 'function') handleJioCinemaInjection();
 
-// Fallback interval check for YouTube's dynamic UI
-setInterval(handleYouTubeInjection, 2000);
+// Fallback interval check for dynamic UI
+setInterval(() => {
+    handleYouTubeInjection();
+    if (typeof handleJioCinemaInjection === 'function') handleJioCinemaInjection();
+}, 2000);
 

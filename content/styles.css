@@ -116,7 +116,8 @@
 }
 
 /* YouTube Button */
-.pip-yt-button {
+.pip-yt-button,
+.pip-jio-button {
     display: inline-block !important;
     position: relative !important;
     width: 48px !important;
@@ -131,24 +132,28 @@
     outline: none !important;
 }
 
-.pip-yt-button:hover {
+.pip-yt-button:hover,
+.pip-jio-button:hover {
     background: rgba(255, 255, 255, 0.1) !important;
     border-radius: 50% !important;
 }
 
-.pip-yt-button svg {
+.pip-yt-button svg,
+.pip-jio-button svg {
     width: 100% !important;
     height: 100% !important;
     pointer-events: none !important;
     transform: scale(0.65) !important;
 }
 
-.pip-yt-button:hover svg path {
+.pip-yt-button:hover svg path,
+.pip-jio-button:hover svg path {
     fill: #6366f1 !important;
     filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.5));
 }
 
-.pip-yt-button:hover::after {
+.pip-yt-button:hover::after,
+.pip-jio-button:hover::after {
     content: '';
     position: absolute;
     top: 10px;
