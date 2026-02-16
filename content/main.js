@@ -2,7 +2,8 @@
 // MAIN ENTRY POINT
 // ==========================================
 
-console.log("Stitch PiP: Extension Loaded 🚀");
+const isIframe = window !== window.top;
+console.log(`Stitch PiP: Extension Loaded 🚀 ${isIframe ? '(Iframe)' : '(Main Frame)'}`);
 
 // Debounced handler for video detection
 const handleVideoDetection = debounce(() => {

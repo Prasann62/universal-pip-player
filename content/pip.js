@@ -29,6 +29,7 @@ async function requestDocumentPiP(video) {
         });
 
         activePipWindow = pipWindow;
+        window.Stitch.activePipWindow = pipWindow;
 
         // Style the PiP window
         pipWindow.document.body.style.margin = "0";
@@ -115,6 +116,7 @@ async function requestDocumentPiP(video) {
         // Restore video on close
         pipWindow.addEventListener("pagehide", () => {
             activePipWindow = null;
+            window.Stitch.activePipWindow = null;
 
             // Restore original styles
             if (originalStyle) {
@@ -245,6 +247,13 @@ function enablePiP(video) {
 
 // Master Toggle Function
 async function togglePiP(index = null) {
+    // 0. Check if Document PiP is already open (priority close)
+    if (window.Stitch && window.Stitch.activePipWindow) {
+        window.Stitch.activePipWindow.close();
+        // showToast("PiP Closed", "info"); // Optional: let the pagehide handler handle cleanup
+        return;
+    }
+
     let video;
     if (index !== null) {
         const videos = document.querySelectorAll("video");

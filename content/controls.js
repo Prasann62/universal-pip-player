@@ -58,8 +58,14 @@ function setupMediaSession() {
 
 // Global Keyboard Shortcuts
 window.addEventListener("keydown", (e) => {
-    // Only trigger if a video exists on the page
-    const video = document.querySelector("video");
+    // Only trigger if a video exists on the page OR in PiP
+    let video = document.querySelector("video");
+
+    // Check if video is in Document PiP
+    if (!video && window.Stitch && window.Stitch.activePipWindow && window.Stitch.activePipWindow.document) {
+        video = window.Stitch.activePipWindow.document.querySelector("video");
+    }
+
     if (!video) return;
 
     // Ignore if typing in an input/textarea
@@ -144,6 +150,8 @@ window.addEventListener("keydown", (e) => {
             if (e.altKey) {
                 if (document.pictureInPictureElement) {
                     document.exitPictureInPicture();
+                } else if (window.Stitch && window.Stitch.activePipWindow) {
+                    window.Stitch.activePipWindow.close();
                 }
                 window.postMessage({ type: "CLOSE_PIP" }, "*");
             }

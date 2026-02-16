@@ -62,7 +62,8 @@
             ],
             "css": [
                 "content/styles.css"
-            ]
+            ],
+            "all_frames": true
         }
     ],
     "web_accessible_resources": [

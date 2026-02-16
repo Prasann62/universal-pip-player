@@ -5,6 +5,7 @@
 // Global state for video navigation
 window.Stitch = window.Stitch || {};
 window.Stitch.toastTimeout = null;
+window.Stitch.activePipWindow = null;
 
 // ==========================================
 // PERFORMANCE UTILITIES

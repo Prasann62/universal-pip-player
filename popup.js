@@ -224,57 +224,96 @@ async function init() {
     if (!tab) return;
 
     // Detect videos via script injection just to get list
+    // Detect videos via script injection just to get list
     chrome.scripting.executeScript({
-        target: { tabId: tab.id },
+        target: { tabId: tab.id, allFrames: true },
         func: () => {
             const videos = Array.from(document.querySelectorAll("video"));
             const iframes = document.querySelectorAll("iframe").length;
             const canvas = document.querySelectorAll("canvas").length;
+            const isIframe = window !== window.top;
 
             return {
                 videos: videos.map((v, i) => ({
                     id: i,
-                    currentSrc: v.currentSrc || "Stream " + (i + 1),
+                    currentSrc: v.currentSrc || (v.src ? v.src : (isIframe ? "Embedded Stream" : "Stream " + (i + 1))),
                     playing: !v.paused
                 })),
                 hasIframes: iframes > 0,
-                hasCanvas: canvas > 0
+                hasCanvas: canvas > 0,
+                isIframe: isIframe,
+                location: window.location.href
             };
         }
     }, (results) => {
-        if (chrome.runtime.lastError || !results || !results[0].result) return;
-        const { videos, hasIframes, hasCanvas } = results[0].result;
+        if (chrome.runtime.lastError || !results) return;
 
-        if (videos.length === 0) {
+        let allVideos = [];
+        let totalIframes = 0;
+        let totalCanvas = 0;
+
+        results.forEach(frameResult => {
+            if (!frameResult.result) return;
+            const { videos, hasIframes, hasCanvas, isIframe, location } = frameResult.result;
+
+            // Add frameId to each video for targeting
+            const videosWithFrameId = videos.map(v => ({ ...v, frameId: frameResult.frameId, frameLocation: location }));
+            allVideos = allVideos.concat(videosWithFrameId);
+
+            if (hasIframes) totalIframes++;
+            if (hasCanvas) totalCanvas++;
+        });
+
+        if (allVideos.length === 0) {
             let msg = "NO SIGNAL DETECTED";
-            if (hasIframes) msg += " (IFRAME LOCKED)";
-            else if (hasCanvas) msg += " (CANVAS RENDER)";
+            if (totalIframes > 0) msg += " (CHECKING FRAMES...)";
+            else if (totalCanvas > 0) msg += " (CANVAS RENDER)";
             showStatus(msg, true);
             pipBtn.style.opacity = "0.5";
             pipBtn.disabled = true;
-        } else if (videos.length > 1) {
-            videoListContainer.style.display = "block";
-            videoList.innerHTML = "";
-            videos.forEach(v => {
-                const btn = document.createElement("button");
-                btn.className = "stitch-btn-outline";
-                btn.textContent = `[CAM-${v.id + 1}] ${v.currentSrc.substring(0, 30)}...`;
-                btn.onclick = () => sendToggleMessage(tab.id, v.id);
-                videoList.appendChild(btn);
-            });
+        } else {
+            // Enable button if disabled
+            pipBtn.style.opacity = "1";
+            pipBtn.disabled = false;
+
+            if (allVideos.length > 1) {
+                videoListContainer.style.display = "block";
+                videoList.innerHTML = "";
+                allVideos.forEach(v => {
+                    const btn = document.createElement("button");
+                    btn.className = "stitch-btn-outline";
+                    // Clean up title
+                    let title = v.currentSrc;
+                    if (title.length > 30) title = title.substring(0, 30) + "...";
+                    if (v.frameId !== 0) title = `[FRAME ${v.frameId}] ${title}`;
+
+                    btn.textContent = title;
+                    btn.onclick = () => sendToggleMessage(tab.id, v.id, v.frameId);
+                    videoList.appendChild(btn);
+                });
+            }
         }
     });
 }
 
-function sendToggleMessage(tabId, index = null) {
-    chrome.tabs.sendMessage(tabId, { type: "TOGGLE_PIP", targetIndex: index }).catch(err => {
-        showStatus("CONNECTION FAILED", true);
+function sendToggleMessage(tabId, index = null, frameId = 0) {
+    const options = frameId !== null ? { frameId: frameId } : {};
+    chrome.tabs.sendMessage(tabId, { type: "TOGGLE_PIP", targetIndex: index }, options).catch(err => {
+        showStatus("CONNECTION FAILED w/ FRAME " + frameId, true);
+        console.warn(err);
     });
 }
 
 pipBtn.addEventListener("click", async () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    sendToggleMessage(tab.id, null); // Null means auto-select
+    // Default to top frame (0) if general click, or we could try to find the "best" video from the list we just got.
+    // For now, let's just send to top frame as per original behavior if no specific video selected, 
+    // BUT since we now support iframes, maybe we should find the playing one?
+    // Let's stick to simple: Main button acts on Main Frame (or we could broadcast).
+    // Better strategy for "Pro": Broadcast to all frames? Or just top. 
+    // Original behavior: sendToggleMessage(tab.id, null). 
+    // Let's try sending to frame 0 by default.
+    sendToggleMessage(tab.id, null, 0);
 });
 
 init();
