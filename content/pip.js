@@ -7,11 +7,19 @@ let activePipWindow = null;
 async function requestDocumentPiP(video) {
     if (!('documentPictureInPicture' in window)) return false;
 
+    // prevent multiple PiP windows
+    if (window.Stitch && window.Stitch.activePipWindow) {
+        window.Stitch.activePipWindow.close();
+    }
+
     try {
         // Save original styles and state
         const originalStyle = video.getAttribute("style") || "";
         const originalParent = video.parentElement;
         const originalNextSibling = video.nextSibling;
+
+        // Mark video as being in PiP to prevent re-capturing by observer
+        video.dataset.isInPip = "true";
 
         // Get saved size preference
         const sizePreference = await chrome.storage.local.get(['playerSize']);
@@ -31,151 +39,233 @@ async function requestDocumentPiP(video) {
         activePipWindow = pipWindow;
         window.Stitch.activePipWindow = pipWindow;
 
-        // Style the PiP window
-        pipWindow.document.body.style.margin = "0";
-        pipWindow.document.body.style.background = "black";
-        pipWindow.document.body.style.display = "flex";
-        pipWindow.document.body.style.alignItems = "center";
-        pipWindow.document.body.style.justifyContent = "center";
-        pipWindow.document.body.style.overflow = "hidden";
+        // Reset Styles for PiP Window
+        Object.assign(pipWindow.document.body.style, {
+            margin: "0",
+            background: "black",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden"
+        });
 
-        // Create a container for video and custom controls
+        // Create a Container
         const container = document.createElement("div");
-        container.style.position = "relative";
-        container.style.width = "100vw";
-        container.style.height = "100vh";
-        container.style.display = "flex";
-        container.style.alignItems = "center";
-        container.style.justifyContent = "center";
+        Object.assign(container.style, {
+            position: "relative",
+            width: "100vw",
+            height: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#000"
+        });
 
-        // Apply override styles to the video to force it to fit
+        // Force Video Styles
         video.style.setProperty("width", "100%", "important");
         video.style.setProperty("height", "100%", "important");
-        video.style.setProperty("position", "relative", "important");
-        video.style.setProperty("left", "0", "important");
-        video.style.setProperty("top", "0", "important");
+        video.style.setProperty("max-width", "none", "important");
+        video.style.setProperty("max-height", "none", "important");
         video.style.setProperty("object-fit", "contain", "important");
+        video.style.setProperty("margin", "0", "important");
 
-        // Move video to PiP
+        // Move video
         container.appendChild(video);
         pipWindow.document.body.appendChild(container);
 
-        // 🎨 Inject Stitch Styles (now pointing to content/styles.css)
+        // 🎨 Inject Styles
         const link = pipWindow.document.createElement("link");
         link.rel = "stylesheet";
         link.href = chrome.runtime.getURL("content/styles.css");
         pipWindow.document.head.appendChild(link);
 
-        // Inject inline overrides for PiP window specifics (layout only)
-        const style = pipWindow.document.createElement("style");
-        style.textContent = `
-            body { background: #050505 !important; width: 100% !important; height: 100% !important; overflow: hidden !important; margin: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; }
-        `;
-        pipWindow.document.head.appendChild(style);
-
-        // Custom Overlay for Controls (Stitch UI)
-        const overlay = document.createElement("div");
-        overlay.className = "pip-overlay";
-        overlay.innerHTML = `
-            <button id="rewind" class="pip-btn" title="Rewind 5s">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="11 19 2 12 11 5 11 19"></polygon><polygon points="22 19 13 12 22 5 22 19"></polygon></svg>
-            </button>
-            <button id="playPause" class="pip-btn" title="Play/Pause">
-                ${video.paused ?
-                '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>' :
-                '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
-            }
-            </button>
-            <button id="forward" class="pip-btn" title="Forward 5s">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
-            </button>
-            <div class="separator"></div>
-            <button id="snapshot" class="pip-btn" title="Take Snapshot">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-            </button>
-        `;
+        // Custom Overlay
+        const { overlay, cleanup: overlayCleanup } = createPipOverlay(video, pipWindow);
         container.appendChild(overlay);
-
-        // Add class to container for hover effect
         container.classList.add("container");
 
-        // Logic for custom buttons
-        const updatePlayIcon = () => {
-            overlay.querySelector("#playPause").innerHTML = video.paused ?
-                '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>' :
-                '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>';
-        };
-        overlay.querySelector("#playPause").onclick = () => {
-            if (video.paused) video.play(); else video.pause();
-            updatePlayIcon();
-        };
-        overlay.querySelector("#rewind").onclick = () => video.currentTime -= 5;
-        overlay.querySelector("#forward").onclick = () => video.currentTime += 5;
-        overlay.querySelector("#snapshot").onclick = () => takeSnapshot(video);
-
-        // Restore video on close
-        pipWindow.addEventListener("pagehide", () => {
+        // Cleanup Function
+        const onPipClose = () => {
             activePipWindow = null;
             window.Stitch.activePipWindow = null;
+            delete video.dataset.isInPip;
 
-            // Restore original styles
+            // Remove overlay listeners
+            if (typeof overlayCleanup === 'function') overlayCleanup();
+
+            // Restore Video
             if (originalStyle) {
                 video.setAttribute("style", originalStyle);
             } else {
                 video.removeAttribute("style");
             }
 
-            // Move back to original position
-            if (originalNextSibling) {
+            if (originalParent && originalParent.isConnected) {
                 originalParent.insertBefore(video, originalNextSibling);
             } else {
-                originalParent.appendChild(video);
+                // Fallback if parent is gone (SPA navigation)
+                // This is tricky, but often we just let it be GC'd or append to body if really needed? 
+                // For now, if parent logic fails, we can't do much.
             }
-        }, { once: true });
 
-        // Detect resize and move shortcuts for Document PiP
-        pipWindow.addEventListener("keydown", (e) => {
-            if (e.altKey) {
-                switch (e.key) {
-                    case "+":
-                    case "=":
-                        pipWindow.resizeBy(20, 20);
-                        break;
-                    case "-":
-                        pipWindow.resizeBy(-20, -20);
-                        break;
-                    case "ArrowUp":
-                        pipWindow.moveBy(0, -20);
-                        break;
-                    case "ArrowDown":
-                        pipWindow.moveBy(0, 20);
-                        break;
-                    case "ArrowLeft":
-                        pipWindow.moveBy(-20, 0);
-                        break;
-                    case "ArrowRight":
-                        pipWindow.moveBy(20, 0);
-                        break;
-                    case "x":
-                    case "X":
-                        pipWindow.close();
-                        break;
-                }
-            }
-        });
+            // Remove listeners
+            pipWindow.removeEventListener("pagehide", onPipClose);
+            // Also remove any listeners added to the video element specifically for PiP if they are not meant to persist.
+            // For example, the 'play' and 'pause' listeners added in createPipOverlay.
+            // However, since the video element is moved back, these listeners might be desired to persist.
+        };
+
+        pipWindow.addEventListener("pagehide", onPipClose, { once: true });
+
+        // Add Shortcuts
+        setupPipShortcuts(pipWindow);
 
         // Handle close from background
-        window.addEventListener("message", (e) => {
+        const messageListener = (e) => {
             if (e.data.type === "CLOSE_PIP") {
                 pipWindow.close();
             }
-        });
+        };
+        window.addEventListener("message", messageListener);
+        // Ensure this listener is also cleaned up
+        const removeMessageListener = () => window.removeEventListener("message", messageListener);
+        pipWindow.addEventListener("pagehide", removeMessageListener, { once: true });
+
 
         return true;
     } catch (e) {
         console.error("Document PiP failed:", e);
+        // Fallback cleanup if partial failure?
+        delete video.dataset.isInPip;
         return false;
     }
+}
+
+// Extracted UI Logic to keep requestDocumentPiP clean
+function createPipOverlay(video, pipWindow) {
+    const overlay = document.createElement("div");
+    overlay.className = "pip-overlay";
+
+    // ... (Button HTML generation moved here or kept inline if preferred)
+    // For brevity in this refactor, I will re-use the specific button logic construction here
+    // But ideally this should be a separate modular function.
+    // Preserving the existing button structure for now but verifying event removal.
+
+    overlay.innerHTML = `
+        <button id="rewind" class="pip-btn" title="Rewind 5s">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="11 19 2 12 11 5 11 19"></polygon><polygon points="22 19 13 12 22 5 22 19"></polygon></svg>
+        </button>
+        <button id="playPause" class="pip-btn" title="Play/Pause">
+             ${!video.paused ?
+            '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>' :
+            '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>'
+        }
+        </button>
+        <button id="forward" class="pip-btn" title="Forward 5s">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
+        </button>
+        <div class="separator"></div>
+        <button id="loopBtn" class="pip-btn" title="Loop: Off">
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+        </button>
+        <button id="speedBtn" class="pip-btn" title="Speed: 1x" style="font-size: 14px; font-weight: bold;">1x</button>
+        <button id="filterBtn" class="pip-btn" title="Filter: None">
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="14.31" y1="8" x2="20.05" y2="17.94"></line><line x1="9.69" y1="8" x2="21.17" y2="8"></line><line x1="7.38" y1="12" x2="13.12" y2="2.06"></line><line x1="9.69" y1="16" x2="3.95" y2="6.06"></line><line x1="14.31" y1="16" x2="2.83" y2="16"></line><line x1="16.62" y1="12" x2="10.88" y2="21.94"></line></svg>
+        </button>
+        <button id="snapshot" class="pip-btn" title="Take Snapshot">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+        </button>
+    `;
+
+    // Bind Events
+    const playBtn = overlay.querySelector("#playPause");
+    const updatePlayIcon = () => {
+        playBtn.innerHTML = video.paused ?
+            '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>' :
+            '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>';
+    };
+
+    playBtn.onclick = () => {
+        if (video.paused) video.play(); else video.pause();
+        updatePlayIcon();
+    };
+
+    // Sync external play state
+    const onPlayPause = () => updatePlayIcon();
+    video.addEventListener('play', onPlayPause);
+    video.addEventListener('pause', onPlayPause);
+
+    // Cleanup callback
+    const cleanup = () => {
+        video.removeEventListener('play', onPlayPause);
+        video.removeEventListener('pause', onPlayPause);
+    };
+
+    // Cleanup listener on window close (handled by main cleanup, but good to be explicit if element removed)
+    // Actually, since video moves back, we might want to keep listeners? No, usually fine.
+
+    overlay.querySelector("#rewind").onclick = () => video.currentTime -= 5;
+    overlay.querySelector("#forward").onclick = () => video.currentTime += 5;
+    overlay.querySelector("#snapshot").onclick = () => takeSnapshot(video);
+
+    // Loop
+    const loopBtn = overlay.querySelector("#loopBtn");
+    loopBtn.style.color = video.loop ? "var(--neon-cyan, #00f3ff)" : "inherit";
+    loopBtn.onclick = () => {
+        video.loop = !video.loop;
+        loopBtn.style.color = video.loop ? "var(--neon-cyan, #00f3ff)" : "inherit";
+        loopBtn.title = `Loop: ${video.loop ? 'On' : 'Off'}`;
+        if (typeof showToast === 'function') showToast(`Loop: ${video.loop ? 'ON' : 'OFF'}`);
+    };
+
+    // Speed
+    const speeds = [1, 1.25, 1.5, 2, 0.5];
+    const speedBtn = overlay.querySelector("#speedBtn");
+    speedBtn.onclick = () => {
+        let idx = speeds.indexOf(video.playbackRate);
+        if (idx === -1) idx = 0;
+        const newSpeed = speeds[(idx + 1) % speeds.length];
+        video.playbackRate = newSpeed;
+        speedBtn.innerText = `${newSpeed}x`;
+        if (typeof showToast === 'function') showToast(`Speed: ${newSpeed}x ⏩`);
+    };
+
+    // Filter
+    const filters = [
+        { name: "None", class: "" },
+        { name: "Contrast", class: "stitch-filter-contrast" },
+        { name: "Cyber", class: "stitch-filter-cyber" },
+        { name: "Gray", class: "stitch-filter-grayscale" }
+    ];
+    let filterIndex = 0;
+    const filterBtn = overlay.querySelector("#filterBtn");
+    filterBtn.onclick = () => {
+        if (filters[filterIndex].class) video.classList.remove(filters[filterIndex].class);
+        filterIndex = (filterIndex + 1) % filters.length;
+        if (filters[filterIndex].class) video.classList.add(filters[filterIndex].class);
+
+        filterBtn.style.color = filterIndex === 0 ? "inherit" : "var(--neon-purple, #bc13fe)";
+        if (typeof showToast === 'function') showToast(`Filter: ${filters[filterIndex].name} 🎨`);
+    };
+
+    return { overlay, cleanup };
+}
+
+
+function setupPipShortcuts(pipWindow) {
+    pipWindow.addEventListener("keydown", (e) => {
+        if (e.altKey) {
+            switch (e.key) {
+                case "+": case "=": pipWindow.resizeBy(20, 20); break;
+                case "-": pipWindow.resizeBy(-20, -20); break;
+                case "ArrowUp": pipWindow.moveBy(0, -20); break;
+                case "ArrowDown": pipWindow.moveBy(0, 20); break;
+                case "ArrowLeft": pipWindow.moveBy(-20, 0); break;
+                case "ArrowRight": pipWindow.moveBy(20, 0); break;
+                case "x": case "X": pipWindow.close(); break;
+            }
+        }
+    });
 }
 
 // Enable PiP functionality on a video element
@@ -188,24 +278,31 @@ function takeSnapshot(video) {
         const ctx = canvas.getContext("2d");
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        const dataURL = canvas.toDataURL("image/png");
+        try {
+            const dataURL = canvas.toDataURL("image/png");
 
-        // Create link and download
-        const link = document.createElement("a");
-        link.href = dataURL;
-        link.download = `stitch-snapshot-${Date.now()}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+            // Create link and download
+            const link = document.createElement("a");
+            link.href = dataURL;
+            link.download = `stitch-snapshot-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
 
-        // Feedback
-        if (typeof showToast === 'function') {
-            showToast("Snapshot Saved 📸");
+            // Feedback
+            if (typeof showToast === 'function') {
+                showToast("Snapshot Saved 📸", "success");
+            }
+        } catch (securityError) {
+            console.warn("Snapshot blocked by CORS:", securityError);
+            if (typeof showToast === 'function') {
+                showToast("Cannot capture protected video 🔒", "error");
+            }
         }
     } catch (e) {
         console.error("Snapshot failed:", e);
         if (typeof showToast === 'function') {
-            showToast("Snapshot Failed 🚫", "error");
+            showToast("Snapshot Error 🚫", "error");
         }
     }
 }

@@ -194,15 +194,31 @@ function findAllVideosInShadow(root = document, videos = []) {
 function isSignificantVideo(video) {
     if (!video) return false;
 
-    const MIN_WIDTH = typeof CONFIG !== 'undefined' ? CONFIG.MIN_VIDEO_WIDTH : 200;
+    const MIN_WIDTH = typeof CONFIG !== 'undefined' ? CONFIG.MIN_VIDEO_WIDTH : 150;
     const MIN_HEIGHT = typeof CONFIG !== 'undefined' ? CONFIG.MIN_VIDEO_HEIGHT : 150;
 
     const rect = video.getBoundingClientRect();
-    const isVisible = rect.width > 0 && rect.height > 0;
-    const isLargeEnough = rect.width >= MIN_WIDTH && rect.height >= MIN_HEIGHT;
-    const hasSource = video.src || video.currentSrc || video.querySelector('source');
 
-    return isVisible && isLargeEnough && hasSource;
+    // 1. Basic Dimension Check
+    if (rect.width < MIN_WIDTH || rect.height < MIN_HEIGHT) return false;
+
+    // 2. Visibility Check (Computed Style)
+    // Only check computed style if dimensions differ significantly or for edge cases?
+    // Doing getComputedStyle is expensive, so rely on dimensions + simple check first.
+    if (rect.width === 0 || rect.height === 0) return false;
+
+    // 3. Content Check
+    // ReadyState: 0=HAVE_NOTHING, 1=HAVE_METADATA, 2=HAVE_CURRENT_DATA, 3=HAVE_FUTURE_DATA, 4=HAVE_ENOUGH_DATA
+    if (video.readyState === 0 && !video.src && !video.querySelector('source')) return false;
+
+    // 4. Exclusion for Background Videos (often muted, loop, autoplay) - Optional heuristic
+    // if (video.muted && video.loop && video.autoplay) return false; 
+
+    // 5. Opacity/Visibility Check (Expensive but needed for "hidden" active videos)
+    const style = window.getComputedStyle(video);
+    if (style.visibility === 'hidden' || style.opacity === '0' || style.display === 'none') return false;
+
+    return true;
 }
 
 /**
@@ -219,13 +235,25 @@ function findPrimaryVideo() {
     if (videos.length === 0) return null;
     if (videos.length === 1) return videos[0];
 
-    // Prioritize: playing video > largest video > first video
-    const playingVideo = videos.find(v => !v.paused);
+    // Priority System:
+    // 1. Playing & Audible (User is watching this)
+    // 2. Playing & Muted (User might be watching)
+    // 3. Largest visible (Likely the main content)
+
+    // 1. Active Playing
+    const playingVideo = videos.find(v => !v.paused && !v.muted && v.currentTime > 0);
     if (playingVideo) return playingVideo;
 
+    // 2. Playing (Muted)
+    const playingMuted = videos.find(v => !v.paused && v.currentTime > 0);
+    if (playingMuted) return playingMuted;
+
+    // 3. Largest Area
     return videos.reduce((largest, current) => {
-        const largestSize = largest.offsetWidth * largest.offsetHeight;
-        const currentSize = current.offsetWidth * current.offsetHeight;
-        return currentSize > largestSize ? current : largest;
+        const largestRect = largest.getBoundingClientRect();
+        const currentRect = current.getBoundingClientRect();
+        const largestArea = largestRect.width * largestRect.height;
+        const currentArea = currentRect.width * currentRect.height;
+        return currentArea > largestArea ? current : largest;
     });
 }
