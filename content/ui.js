@@ -158,7 +158,9 @@ function toggleHelpTooltip() {
     stitchHelp.className = "stitch-help-border";
     help.appendChild(stitchHelp);
 
-    help.innerHTML += `
+    // FIX BUG 2: Use insertAdjacentHTML instead of innerHTML += to avoid
+    // destroying the stitchHelp node that was just appended via appendChild.
+    help.insertAdjacentHTML('beforeend', `
         <div class="help-header">
             <span>⌨️</span> Keyboard Shortcuts
         </div>

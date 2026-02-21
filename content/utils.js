@@ -131,6 +131,11 @@ function showToast(message, type = 'info', duration = 2000) {
         `;
         toast.appendChild(stitch);
 
+        // Dedicated text node so stitch element is never destroyed by textContent
+        const textSpan = document.createElement("span");
+        textSpan.className = "pip-toast-text";
+        toast.appendChild(textSpan);
+
         document.body.appendChild(toast);
     }
 
@@ -151,7 +156,14 @@ function showToast(message, type = 'info', duration = 2000) {
         stitch.style.borderColor = color + '40';
     }
 
-    toast.textContent = message;
+    // FIX BUG 3: Use dedicated text span to avoid destroying stitch child element
+    let textSpan = toast.querySelector('.pip-toast-text');
+    if (!textSpan) {
+        textSpan = document.createElement('span');
+        textSpan.className = 'pip-toast-text';
+        toast.appendChild(textSpan);
+    }
+    textSpan.textContent = message;
     toast.style.opacity = "1";
 
     if (window.Stitch.toastTimeout) clearTimeout(window.Stitch.toastTimeout);

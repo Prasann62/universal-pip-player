@@ -356,7 +356,7 @@ async function togglePiP(index = null) {
         const videos = document.querySelectorAll("video");
         video = videos[index];
         if (!video) {
-            showToast("Video not found at index ${index} 🚫", "error");
+            showToast(`Video not found at index ${index} 🚫`, "error");
             return;
         }
     } else {

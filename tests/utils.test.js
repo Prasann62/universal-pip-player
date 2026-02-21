@@ -6,7 +6,9 @@
 global.chrome = {
     storage: {
         local: {
-            get: jest.fn((keys, callback) => {
+            // FIX: Return Promise that resolves with the result object directly,
+            // matching the Promise API used by getStorageValue (not callback style)
+            get: jest.fn((keys) => {
                 const mockData = {
                     theme: 'dark',
                     playerSize: 'medium',
@@ -18,11 +20,9 @@ global.chrome = {
                         result[key] = mockData[key];
                     }
                 });
-                callback(result);
                 return Promise.resolve(result);
             }),
-            set: jest.fn((items, callback) => {
-                if (callback) callback();
+            set: jest.fn((items) => {
                 return Promise.resolve();
             })
         }
@@ -152,7 +152,8 @@ describe('Video Detection Utilities', () => {
             const rect = video.getBoundingClientRect();
             const isVisible = rect.width > 0 && rect.height > 0;
             const isLargeEnough = rect.width >= MIN_WIDTH && rect.height >= MIN_HEIGHT;
-            const hasSource = video.src || video.currentSrc || video.querySelector('source');
+            // FIX: Use !! to coerce truthy values (strings, objects) to proper booleans
+            const hasSource = !!(video.src || video.currentSrc || video.querySelector('source'));
 
             return isVisible && isLargeEnough && hasSource;
         }
@@ -186,7 +187,8 @@ describe('Video Detection Utilities', () => {
             const rect = video.getBoundingClientRect();
             const isVisible = rect.width > 0 && rect.height > 0;
             const isLargeEnough = rect.width >= MIN_WIDTH && rect.height >= MIN_HEIGHT;
-            const hasSource = video.src || video.currentSrc || video.querySelector('source');
+            // FIX: Use !! to coerce truthy values (strings, objects) to proper booleans
+            const hasSource = !!(video.src || video.currentSrc || video.querySelector('source'));
 
             return isVisible && isLargeEnough && hasSource;
         }
