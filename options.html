@@ -1,39 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <title>Stitch PiP Options</title>
+    <title>S.T.I.T.C.H Configuration</title>
     <link rel="stylesheet" href="stitch.css">
     <style>
         body {
             width: 100%;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+        }
+
+        .options-page {
+            width: 620px;
+            max-width: 100%;
+        }
+
+        .options-header {
+            display: flex;
             align-items: center;
-            background: var(--void-bg);
-            margin: 0;
+            gap: 12px;
+            margin-bottom: 32px;
         }
 
-        .options-container {
-            width: 600px;
-            max-width: 90%;
-            background: rgba(20, 20, 20, 0.6);
-            border: 1px solid var(--glass-border);
-            backdrop-filter: blur(12px);
-            border-radius: 16px;
-            padding: 32px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        .options-header img {
+            width: 36px;
+            height: 36px;
+            filter: drop-shadow(0 0 8px var(--neon-cyan));
         }
 
-        h2 {
+        .options-header h1 {
             font-family: 'Outfit', sans-serif;
-            color: var(--neon-cyan);
-            margin-top: 0;
-            border-bottom: 1px dashed var(--glass-border);
-            padding-bottom: 16px;
-            margin-bottom: 24px;
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .options-header .badge {
+            font-size: 9px;
         }
 
         .section {
@@ -41,11 +53,14 @@
         }
 
         .section-title {
-            font-size: 14px;
-            color: var(--secondary);
+            font-size: 9px;
+            color: var(--neon-cyan);
+            letter-spacing: 2px;
             margin-bottom: 12px;
-            font-weight: bold;
             display: block;
+            border-bottom: 1px dashed var(--glass-border);
+            padding-bottom: 8px;
+            font-family: 'Outfit', sans-serif;
         }
 
         .option-row {
@@ -53,96 +68,160 @@
             justify-content: space-between;
             align-items: center;
             padding: 12px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
 
         .option-row:last-child {
             border-bottom: none;
         }
 
-        label {
+        .option-label {
             color: var(--text-primary);
-            font-size: 14px;
+            font-size: 13px;
         }
 
-        select,
-        input[type="text"] {
-            background: rgba(0, 0, 0, 0.3);
+        .option-desc {
+            color: var(--text-muted);
+            font-size: 10px;
+            margin-top: 2px;
+        }
+
+        select {
+            background: rgba(0, 0, 0, 0.35);
             border: 1px solid var(--glass-border);
             color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 4px;
+            padding: 7px 12px;
+            border-radius: var(--radius-sm);
             font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
             outline: none;
+            transition: var(--transition);
         }
 
-        select:focus,
-        input[type="text"]:focus {
+        select:focus {
             border-color: var(--neon-cyan);
         }
 
         .save-btn {
-            width: 100%;
-            margin-top: 16px;
+            margin-top: 24px;
         }
 
-        .shortcut-list {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .shortcut-item {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .key {
-            color: var(--neon-purple);
-            font-weight: bold;
+        #status {
+            text-align: center;
+            margin-top: 10px;
+            min-height: 18px;
+            font-size: 11px;
+            color: var(--success);
+            font-family: 'JetBrains Mono', monospace;
         }
     </style>
 </head>
 
 <body class="theme-dark">
-    <div class="options-container">
-        <h2>S.T.I.T.C.H CONFIGURATION</h2>
+    <!-- Ambient Glows -->
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
 
+    <div class="options-page">
+
+        <!-- Header -->
+        <div class="options-header">
+            <img src="pip.webp" alt="S.T.I.T.C.H">
+            <div>
+                <h1>S.T.I.T.C.H</h1>
+                <span class="badge">CONFIGURATION PANEL</span>
+            </div>
+        </div>
+
+        <!-- ── PLAYBACK PREFERENCES ── -->
         <div class="section">
             <span class="section-title">PLAYBACK PREFERENCES</span>
-            <div class="option-row">
-                <label for="defaultSize">Default PiP Size</label>
-                <select id="defaultSize">
-                    <option value="small">Small (300px)</option>
-                    <option value="medium">Medium (380px)</option>
-                    <option value="large">Large (500px)</option>
-                </select>
-            </div>
-            <div class="option-row">
-                <label for="autoPip">Auto-PiP on Tab Switch</label>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="autoPip">
-                    <span class="slider"></span>
-                </label>
+            <div class="config-card">
+                <div class="option-row">
+                    <div>
+                        <div class="option-label">Default PiP Size</div>
+                        <div class="option-desc">Size of the PiP window on launch</div>
+                    </div>
+                    <select id="defaultSize">
+                        <option value="small">Small (300px)</option>
+                        <option value="medium">Medium (380px)</option>
+                        <option value="large">Large (500px)</option>
+                    </select>
+                </div>
+                <div class="option-row">
+                    <div>
+                        <div class="option-label">Auto-PiP on Tab Switch</div>
+                        <div class="option-desc">Smart detection — skips ads and short clips</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="autoPip">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="option-row">
+                    <div>
+                        <div class="option-label">Default Theme</div>
+                        <div class="option-desc">Dark / Light / Auto (follows system)</div>
+                    </div>
+                    <select id="defaultTheme">
+                        <option value="dark">Dark</option>
+                        <option value="light">Light</option>
+                        <option value="auto">Auto (System)</option>
+                    </select>
+                </div>
             </div>
         </div>
 
+        <!-- ── SITE ALLOW LIST ── -->
         <div class="section">
-            <span class="section-title">SHORTCUTS (READ ONLY)</span>
-            <div class="shortcut-list" id="shortcutList">
-                <!-- Populated by JS -->
+            <span class="section-title">SITE BLOCKLIST</span>
+            <div class="config-card">
+                <div style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">
+                    Sites added here will have the extension <strong style="color:var(--danger)">disabled</strong>.
+                    Press Enter or click Add to save.
+                </div>
+                <div class="site-list" id="siteList"></div>
+                <div class="site-add-row">
+                    <input type="text" id="siteInput" class="stitch-input" placeholder="e.g. example.com">
+                    <button id="addSiteBtn" class="add-btn">ADD</button>
+                </div>
             </div>
         </div>
 
+        <!-- ── KEYBOARD SHORTCUTS ── -->
+        <div class="section">
+            <span class="section-title">KEYBOARD SHORTCUTS (READ ONLY)</span>
+            <div class="config-card">
+                <div style="font-size:10px; color:var(--text-muted); margin-bottom:12px;">
+                    To change shortcuts, visit <strong
+                        style="color:var(--neon-cyan)">chrome://extensions/shortcuts</strong>
+                </div>
+                <div id="shortcutList">
+                    <div class="shortcut-item"><span>Toggle PiP</span><span class="key">Alt + P</span></div>
+                    <div class="shortcut-item"><span>Close PiP</span><span class="key">Alt + X</span></div>
+                    <div class="shortcut-item"><span>Play / Pause</span><span class="key">Space</span></div>
+                    <div class="shortcut-item"><span>Mute / Unmute</span><span class="key">M</span></div>
+                    <div class="shortcut-item"><span>Seek Backward 5s</span><span class="key">← </span></div>
+                    <div class="shortcut-item"><span>Seek Forward 5s</span><span class="key">→</span></div>
+                    <div class="shortcut-item"><span>Volume Up</span><span class="key">Alt + ↑</span></div>
+                    <div class="shortcut-item"><span>Volume Down</span><span class="key">Alt + ↓</span></div>
+                    <div class="shortcut-item"><span>Speed Up</span><span class="key">Shift + &gt;</span></div>
+                    <div class="shortcut-item"><span>Speed Down</span><span class="key">Shift + &lt;</span></div>
+                    <div class="shortcut-item"><span>Resize PiP</span><span class="key">Alt + = / -</span></div>
+                    <div class="shortcut-item"><span>Move PiP</span><span class="key">Alt + Arrows</span></div>
+                    <div class="shortcut-item"><span>Help Tooltip</span><span class="key">H</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Button -->
         <button id="saveBtn" class="hero-btn save-btn">
             <span class="btn-text">SAVE SETTINGS</span>
             <span class="btn-glow"></span>
         </button>
-        <div id="status"
-            style="text-align: center; margin-top: 10px; height: 20px; font-size: 12px; color: var(--success);"></div>
+        <div id="status"></div>
     </div>
+
     <script src="content/config.js"></script>
     <script src="options.js"></script>
 </body>

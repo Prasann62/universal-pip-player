@@ -6,10 +6,10 @@ A powerful **Brave / Chromium browser extension** that enables **Mini Player** a
 
 Built with a **cyberpunk Stitch UI**, privacy-first design, and advanced keyboard controls — no tracking, 100% local execution.
 
-[![Version](https://img.shields.io/badge/version-1.1.0-cyan?style=flat-square&logo=googlechrome)](https://github.com/Prasann62/onlinesubtitleextenction)
+[![Version](https://img.shields.io/badge/version-3.0.0-cyan?style=flat-square&logo=googlechrome)](https://github.com/Prasann62/onlinesubtitleextenction)
 [![Manifest](https://img.shields.io/badge/Manifest-V3-blueviolet?style=flat-square)](https://developer.chrome.com/docs/extensions/mv3/)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
-[![Build](https://img.shields.io/badge/build-DEV--BUILD-orange?style=flat-square)]()
+[![Build](https://img.shields.io/badge/build-PRO-brightgreen?style=flat-square)]()
 
 ---
 
@@ -66,9 +66,49 @@ Built with a **cyberpunk Stitch UI**, privacy-first design, and advanced keyboar
 
 ---
 
-## 🚀 What's New in v1.1.0
+## 🚀 What's New in v3.0.0 — Pro Edition
 
-### ✨ New Features
+> **This is the biggest release yet.** Every screen, every interaction, every bug — completely reimagined.
+
+### 🖼️ Live Video Preview in Popup
+- **Real-time canvas thumbnail** of the active video rendered directly in the popup at 500ms intervals
+- Neon `LIVE` / `PAUSED` status badge on the preview
+- No-signal state with animated icon when no video is detected
+
+### 🎛️ Pro Inline Playback Controls
+- **Play/Pause, Seek ±10s, Mute, Speed cycle, Loop toggle** — all usable directly from the popup
+- **Volume slider** with live percentage display — no need to touch the page
+- **Seekable neon progress bar** with current time and duration display
+- Fully synced with the actual video state in real-time
+
+### 🧠 Smart Auto-PiP v2
+- Now **skips muted videos**, short clips (< 10s), and content that has played < 3s
+- Prevents false triggers from ads and embedded previews
+
+### 🌐 Site Blocklist Manager
+- New options page section to add/remove sites where the extension is **disabled**
+- Persisted via `chrome.storage.local`
+
+### 🌙 3-Way Theme: Dark / Light / Auto
+- New **Auto** mode follows your OS dark/light preference
+- Popup theme cycles Dark → Light → Auto with a single click
+
+### ⚙️ Overhauled Options Page
+- Full shortcut reference with keyboard key badges
+- Theme selector with 3 modes
+- Redesigned S.T.I.T.C.H glassmorphic layout
+
+### 🎨 S.T.I.T.C.H CSS Rewrite (v3 Design System)
+- `stitch.css` fully rewritten with: new progress bar, preview card, quick-controls row, mini-slider, site list, toast queue classes
+- Smoother `cubic-bezier` transitions everywhere
+- Third ambient glow blob for depth
+- Scrollbar styling for overflow panels
+
+---
+
+## 📋 Previous Releases
+
+### v1.1.0
 - Stitch cyberpunk UI with glassmorphism and neon glow effects
 - Animated Neuro-Link canvas visualizer in the popup
 - Options page (`options.html`) for expanded configuration
@@ -76,23 +116,8 @@ Built with a **cyberpunk Stitch UI**, privacy-first design, and advanced keyboar
 - Playback speed controls (`Shift + > / <`)
 - Auto-PiP on tab switch toggle
 - Enhanced toast notification system with 4 color-coded types
-
-### ⚡ Performance Improvements
-- Debounced mutation observer reduces CPU usage significantly
+- Debounced mutation observer reduces CPU usage
 - Optimized video detection algorithm
-- Better memory management and cleanup on unload
-
-### 🎨 UI Enhancements
-- Complete Stitch UI overhaul (dark mode, glassmorphism, neon)
-- Segmented viewport size control (S/M/L)
-- Floating "DETECTED STREAMS" log panel in popup
-- System-style footer with connection status
-
-### 🐛 Bug Fixes
-- Fixed forward seek emoji (was incorrectly showing rewind icon)
-- Improved keyboard shortcut conflict resolution
-- Better error handling and fallback logic throughout
-- Fixed mini-player overlay alignment on document PiP
 
 ---
 
@@ -214,6 +239,16 @@ npm test -- --watch
 - [x] Neuro-Link canvas visualizer
 - [x] Options page for extended settings
 - [x] Color-coded toast notification system
+- [x] **v2.0** — Unified S.T.I.T.C.H UI across popup + options page
+- [x] **v2.0** — Iframe PiP activation bug fix
+- [x] **v2.0** — Jest test suite stabilized
+- [x] **v3.0** — Live video preview canvas in popup
+- [x] **v3.0** — Inline playback controls (play/pause/seek/mute/speed/loop)
+- [x] **v3.0** — Volume slider + seekable progress bar in popup
+- [x] **v3.0** — Smart Auto-PiP v2 (skips ads/muted/shorts)
+- [x] **v3.0** — Site blocklist manager in options
+- [x] **v3.0** — 3-way Dark/Light/Auto theme
+- [x] **v3.0** — Full S.T.I.T.C.H CSS design system rewrite
 - [ ] Draggable floating window
 - [ ] Custom positioning options
 - [ ] Platform-specific enhancements (Netflix, Prime Video, etc.)

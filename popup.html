@@ -1,34 +1,41 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
+    <title>S.T.I.T.C.H — PiP Control Hub</title>
     <link rel="stylesheet" href="stitch.css">
 </head>
 
 <body class="theme-dark">
-    <div class="app-container">
-        <!-- Background Elements for Glassmorphism -->
-        <div class="bg-glow-1"></div>
-        <div class="bg-glow-2"></div>
+    <!-- Ambient Glows -->
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+    <div class="bg-glow-3"></div>
 
+    <div class="app-container">
+
+        <!-- ── HEADER ── -->
         <header class="app-header">
             <div class="brand">
                 <div class="logo-icon">
-                    <img src="pip.webp" alt="Logo">
+                    <img src="pip.webp" alt="S.T.I.T.C.H Logo">
                 </div>
                 <div class="brand-text">
                     <h1>S.T.I.T.C.H</h1>
-                    <span class="badge">DEV-BUILD</span>
+                    <span class="badge">v3.0 PRO</span>
                 </div>
             </div>
+
             <!-- Neuro-Link Visualizer -->
             <div class="neuro-link-container">
                 <canvas id="neuroLinkCanvas"></canvas>
             </div>
+
             <div class="header-actions">
-                <button id="themeToggleBtn" class="icon-btn" title="Toggle Theme">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                <!-- Theme Cycle Button -->
+                <button id="themeToggleBtn" class="icon-btn" title="Cycle Theme">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="5"></circle>
                         <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -41,22 +48,137 @@
                         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                     </svg>
                 </button>
+                <!-- Settings Link -->
+                <button id="optionsBtn" class="icon-btn" title="Settings">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                </button>
             </div>
         </header>
 
+        <!-- ── MAIN CONTENT ── -->
         <main class="app-content">
-            <!-- Primary Action -->
+
+            <!-- ── VIDEO PREVIEW PANEL ── -->
+            <section class="video-preview-section fade-in">
+                <div class="preview-card">
+                    <!-- Live canvas preview -->
+                    <div class="preview-canvas-wrapper">
+                        <canvas id="videoPreviewCanvas"></canvas>
+                        <!-- No Signal State -->
+                        <div class="preview-no-signal" id="noSignalOverlay">
+                            <svg class="preview-no-signal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.5">
+                                <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+                                <polyline points="17 2 12 7 7 2"></polyline>
+                            </svg>
+                            <span class="preview-no-signal-text">Awaiting Signal</span>
+                        </div>
+                        <!-- Playing status badge -->
+                        <div class="preview-status-badge" id="previewStatusBadge">
+                            <div class="badge-dot" id="previewBadgeDot"></div>
+                            <span id="previewBadgeText">SCANNING</span>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="progress-section">
+                        <div class="progress-time-row">
+                            <span id="currentTimeDisplay">0:00</span>
+                            <span id="durationDisplay">0:00</span>
+                        </div>
+                        <div class="progress-bar-track" id="progressBarTrack">
+                            <div class="progress-bar-fill" id="progressBarFill"></div>
+                        </div>
+                    </div>
+
+                    <!-- Inline Playback Controls -->
+                    <div class="playback-controls">
+                        <button class="control-btn secondary" id="inlineRewindBtn" title="Rewind 10s">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                <polygon points="11 19 2 12 11 5 11 19"></polygon>
+                                <polygon points="22 19 13 12 22 5 22 19"></polygon>
+                            </svg>
+                        </button>
+
+                        <button class="control-btn primary" id="inlinePlayPauseBtn" title="Play / Pause">
+                            <!-- Play icon -->
+                            <svg id="playIcon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
+                                stroke="none">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            <!-- Pause icon (hidden by default) -->
+                            <svg id="pauseIcon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
+                                stroke="none" style="display:none;">
+                                <rect x="6" y="4" width="4" height="16"></rect>
+                                <rect x="14" y="4" width="4" height="16"></rect>
+                            </svg>
+                        </button>
+
+                        <button class="control-btn secondary" id="inlineForwardBtn" title="Forward 10s">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                <polygon points="13 19 22 12 13 5 13 19"></polygon>
+                                <polygon points="2 19 11 12 2 5 2 19"></polygon>
+                            </svg>
+                        </button>
+
+                        <div class="controls-divider"></div>
+
+                        <button class="control-btn secondary" id="inlineMuteBtn" title="Mute / Unmute">
+                            <svg id="muteOffIcon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            </svg>
+                            <svg id="muteOnIcon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" style="display:none;">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                <line x1="23" y1="9" x2="17" y2="15"></line>
+                                <line x1="17" y1="9" x2="23" y2="15"></line>
+                            </svg>
+                        </button>
+
+                        <button class="control-btn secondary" id="inlineSpeedBtn" title="Playback Speed"
+                            style="font-size:10px; font-family:'Outfit',sans-serif; font-weight:700; min-width:28px;">1x</button>
+
+                        <button class="control-btn secondary" id="inlineLoopBtn" title="Toggle Loop">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 1l4 4-4 4"></path>
+                                <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                                <path d="M7 23l-4-4 4-4"></path>
+                                <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Quick Volume Row -->
+                    <div class="quick-controls-row">
+                        <span class="quick-label">VOL</span>
+                        <input type="range" id="volumeSlider" class="mini-slider" min="0" max="100" value="100"
+                            step="1">
+                        <span class="quick-value" id="volumeValue">100%</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── PRIMARY ACTION BUTTON ── -->
             <section class="control-section">
                 <button id="pipBtn" class="hero-btn">
                     <span class="btn-icon">
-                        <img src="pip.webp" alt="" width="24">
+                        <img src="pip.webp" alt="" width="18">
                     </span>
                     <span class="btn-text">INITIALIZE PiP</span>
                     <span class="btn-glow"></span>
                 </button>
             </section>
 
-            <!-- Configuration Grid -->
+            <!-- ── CONFIGURATION GRID ── -->
             <section class="config-grid">
                 <!-- Auto-PiP Toggle -->
                 <div class="config-card">
@@ -67,12 +189,12 @@
                             <span class="slider"></span>
                         </label>
                     </div>
-                    <div class="config-desc">Engage PiP on tab switch</div>
+                    <div class="config-desc">Smart PiP on tab switch</div>
                 </div>
 
                 <!-- Size Selector -->
                 <div class="config-card size-card">
-                    <span class="label">VIEWPORT SIZE</span>
+                    <span class="label">VIEWPORT</span>
                     <div class="segment-control">
                         <button class="segment-btn" data-size="small">S</button>
                         <button class="segment-btn active" data-size="medium">M</button>
@@ -81,7 +203,7 @@
                 </div>
             </section>
 
-            <!-- Status / Logs -->
+            <!-- ── DETECTED STREAMS LIST ── -->
             <div id="videoListContainer" class="logs-container" style="display:none;">
                 <div class="logs-header">
                     <span class="blink">●</span> DETECTED STREAMS
@@ -89,14 +211,18 @@
                 <div id="videoList" class="logs-list"></div>
             </div>
 
+            <!-- ── STATUS MESSAGE ── -->
             <div id="statusMsg" class="system-msg" style="display:none;"></div>
         </main>
 
+        <!-- ── FOOTER ── -->
         <footer class="app-footer">
-            <span class="system-id">SYS.ID: 9X-214</span>
-            <span class="connection-status online">ONLINE</span>
+            <span class="footer-pill">SYS.ID: 9X-214</span>
+            <span id="streamCount" class="footer-pill">0 STREAMS</span>
+            <span class="connection-status online">● LIVE</span>
         </footer>
     </div>
+
     <script src="popup.js"></script>
 </body>
 

@@ -56,9 +56,8 @@ describe('Keyboard Controls', () => {
     test('Arrow right should forward 5 seconds', () => {
         mockVideo.currentTime = 10;
 
-        // FIX: In jsdom, HTMLMediaElement.duration is read-only (NaN by default).
-        // Use our own local duration guard instead of relying on mockVideo.duration.
-        const duration = 100; // represent a 100s video
+        // Simulate arrow right logic with a fixed duration boundary
+        const duration = 100;
         mockVideo.currentTime = Math.min(duration, mockVideo.currentTime + 5);
 
         expect(mockVideo.currentTime).toBe(15);

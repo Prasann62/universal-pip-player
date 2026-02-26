@@ -1,0 +1,24 @@
+﻿
+> extenction@1.0.0 test
+> jest
+
+node.exe : PASS tests/controls.test.js
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecifie 
+   d: (PASS tests/controls.test.js:Strin  
+  g) [], RemoteException
+    + FullyQualifiedErrorId : NativeComma 
+   ndError
+ 
+PASS tests/utils.test.js
+PASS tests/pip.test.js
+
+Test Suites: 3 passed, 3 total
+Tests:       23 passed, 23 total
+Snapshots:   0 total
+Time:        0.827 s, estimated 1 s
+Ran all test suites.

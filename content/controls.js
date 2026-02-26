@@ -173,13 +173,46 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
         window.postMessage({ type: "CLOSE_PIP" }, "*");
     } else if (request.type === "AUTO_PIP_CHECK") {
-        // Check if there's a playing video on this tab
+        // Smart Auto-PiP v2: Only trigger if video has been playing for a meaningful duration
         const video = typeof findPrimaryVideo === 'function' ? findPrimaryVideo() : document.querySelector('video');
-        if (video && !video.paused && !document.pictureInPictureElement) {
-            // Video is playing and not in PiP, trigger PiP
-            if (typeof togglePiP === 'function') {
-                togglePiP();
+        if (video && !video.paused && !video.muted && !document.pictureInPictureElement) {
+            // Skip short clips and ads (< 10s duration or < 3s played)
+            const dur = video.duration;
+            const isLongEnough = !isFinite(dur) || dur > 10;
+            const hasPlayedLongEnough = video.currentTime > 3;
+            if (isLongEnough && hasPlayedLongEnough) {
+                if (typeof togglePiP === 'function') togglePiP();
             }
+        }
+    } else if (request.type === "VIDEO_COMMAND") {
+        // Inline popup controls — v3 Pro
+        const video = typeof findPrimaryVideo === 'function' ? findPrimaryVideo() : document.querySelector('video');
+        if (!video) return;
+
+        switch (request.command) {
+            case 'togglePlayPause':
+                if (video.paused) video.play().catch(() => { }); else video.pause();
+                break;
+            case 'seek_relative':
+                video.currentTime = Math.max(0, Math.min(video.duration || 0, video.currentTime + (request.delta || 0)));
+                break;
+            case 'seek':
+                if (isFinite(video.duration)) video.currentTime = request.pct * video.duration;
+                break;
+            case 'toggleMute':
+                video.muted = !video.muted;
+                break;
+            case 'set_volume':
+                video.volume = Math.max(0, Math.min(1, request.volume));
+                if (video.muted && request.volume > 0) video.muted = false;
+                break;
+            case 'set_speed':
+                video.playbackRate = request.speed;
+                break;
+            case 'toggleLoop':
+                video.loop = !video.loop;
+                if (typeof showToast === 'function') showToast(`Loop: ${video.loop ? 'ON 🔁' : 'OFF'}`, 'info');
+                break;
         }
     }
 });
