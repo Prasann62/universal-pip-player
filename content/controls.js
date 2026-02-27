@@ -172,18 +172,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             document.exitPictureInPicture().catch(() => { });
         }
         window.postMessage({ type: "CLOSE_PIP" }, "*");
-    } else if (request.type === "AUTO_PIP_CHECK") {
-        // Smart Auto-PiP v2: Only trigger if video has been playing for a meaningful duration
-        const video = typeof findPrimaryVideo === 'function' ? findPrimaryVideo() : document.querySelector('video');
-        if (video && !video.paused && !video.muted && !document.pictureInPictureElement) {
-            // Skip short clips and ads (< 10s duration or < 3s played)
-            const dur = video.duration;
-            const isLongEnough = !isFinite(dur) || dur > 10;
-            const hasPlayedLongEnough = video.currentTime > 3;
-            if (isLongEnough && hasPlayedLongEnough) {
-                if (typeof togglePiP === 'function') togglePiP();
-            }
-        }
+
     } else if (request.type === "VIDEO_COMMAND") {
         // Inline popup controls — v3 Pro
         const video = typeof findPrimaryVideo === 'function' ? findPrimaryVideo() : document.querySelector('video');

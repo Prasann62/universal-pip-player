@@ -82,3 +82,48 @@ window.addEventListener('unload', () => {
     clearTimeout(injectionTimeout);
 });
 
+// ==========================================
+// AUTO-PIP ON VISIBILITY CHANGE (MINIMIZE / TAB SWITCH)
+// ==========================================
+
+// ==========================================
+// AUTO-PIP ON VISIBILITY CHANGE (MINIMIZE / TAB SWITCH)
+// ==========================================
+
+// Keep a live sync of the autoPipEnabled setting
+window.Stitch = window.Stitch || {};
+window.Stitch.autoPipEnabled = false;
+
+// Function to apply native auto-pip attribute
+function syncAutoPipAttribute() {
+    const videos = document.querySelectorAll("video");
+    videos.forEach(video => {
+        if ('autoPictureInPicture' in video) {
+            video.autoPictureInPicture = window.Stitch.autoPipEnabled;
+        }
+    });
+}
+
+// Initial load
+if (typeof chrome !== 'undefined' && chrome.storage) {
+    chrome.storage.local.get(['autoPipEnabled'], (res) => {
+        window.Stitch.autoPipEnabled = res.autoPipEnabled || false;
+        syncAutoPipAttribute();
+    });
+
+    // Listen for changes from options/popup
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+        if (namespace === 'local' && changes.autoPipEnabled) {
+            window.Stitch.autoPipEnabled = changes.autoPipEnabled.newValue;
+            console.log("[Stitch PiP] Setting autoPipEnabled updated to:", window.Stitch.autoPipEnabled);
+            syncAutoPipAttribute();
+        }
+    });
+}
+
+// Also hook into video playing event to ensure it's synced if the video is loaded dynamically
+document.addEventListener('play', (e) => {
+    if (e.target.tagName === 'VIDEO' && 'autoPictureInPicture' in e.target) {
+        e.target.autoPictureInPicture = window.Stitch.autoPipEnabled;
+    }
+}, true);
