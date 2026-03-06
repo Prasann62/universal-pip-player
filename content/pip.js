@@ -146,69 +146,211 @@ function createPipOverlay(video, pipWindow) {
     const overlay = document.createElement("div");
     overlay.className = "pip-overlay";
 
-    // ... (Button HTML generation moved here or kept inline if preferred)
-    // For brevity in this refactor, I will re-use the specific button logic construction here
-    // But ideally this should be a separate modular function.
-    // Preserving the existing button structure for now but verifying event removal.
+    // Format time utility
+    const formatTime = (seconds) => {
+        if (!isFinite(seconds) || isNaN(seconds)) return "0:00";
+        const m = Math.floor(seconds / 60);
+        const s = Math.floor(seconds % 60);
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+    };
 
     overlay.innerHTML = `
-        <button id="rewind" class="pip-btn" title="Rewind 5s">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="11 19 2 12 11 5 11 19"></polygon><polygon points="22 19 13 12 22 5 22 19"></polygon></svg>
-        </button>
-        <button id="playPause" class="pip-btn" title="Play/Pause">
-             ${!video.paused ?
-            '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>' :
-            '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>'
+        <div class="pip-progress-container" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span id="pip-time-current" style="font-size: 10px; font-family: monospace; color: #fff;">${formatTime(video.currentTime)}</span>
+            <input type="range" id="pip-progress" class="pip-slider" min="0" max="100" value="0" step="0.1" style="flex: 1; cursor: pointer;">
+            <span id="pip-time-total" style="font-size: 10px; font-family: monospace; color: #fff;">${formatTime(video.duration)}</span>
+        </div>
+        <div class="pip-controls-row" style="display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%;">
+            <button id="rewind" class="pip-btn" title="Rewind 5s">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="11 19 2 12 11 5 11 19"></polygon><polygon points="22 19 13 12 22 5 22 19"></polygon></svg>
+            </button>
+            <button id="playPause" class="pip-btn" title="Play/Pause">
+                 ${!video.paused ?
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>' :
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>'
         }
-        </button>
-        <button id="forward" class="pip-btn" title="Forward 5s">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
-        </button>
-        <div class="separator"></div>
-        <button id="loopBtn" class="pip-btn" title="Loop: Off">
-             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
-        </button>
-        <button id="speedBtn" class="pip-btn" title="Speed: 1x" style="font-size: 14px; font-weight: bold;">1x</button>
-        <button id="filterBtn" class="pip-btn" title="Filter: None">
-             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="14.31" y1="8" x2="20.05" y2="17.94"></line><line x1="9.69" y1="8" x2="21.17" y2="8"></line><line x1="7.38" y1="12" x2="13.12" y2="2.06"></line><line x1="9.69" y1="16" x2="3.95" y2="6.06"></line><line x1="14.31" y1="16" x2="2.83" y2="16"></line><line x1="16.62" y1="12" x2="10.88" y2="21.94"></line></svg>
-        </button>
-        <button id="snapshot" class="pip-btn" title="Take Snapshot">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-        </button>
+            </button>
+            <button id="forward" class="pip-btn" title="Forward 5s">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
+            </button>
+            
+            <div class="separator"></div>
+            
+            <div class="pip-volume-ctrl" style="display: flex; align-items: center; gap: 4px;">
+                <button id="muteBtn" class="pip-btn" title="Mute/Unmute">
+                    ${video.muted || video.volume === 0 ?
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>' :
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>'
+        }
+                </button>
+                <input type="range" id="pip-volume" class="pip-slider" min="0" max="1" step="0.05" value="${video.muted ? 0 : video.volume}" style="width: 40px; cursor: pointer;">
+            </div>
+
+            <div class="separator"></div>
+            
+            <button id="ccBtn" class="pip-btn" title="Subtitles/CC">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><path d="M7 11.5h2"></path><path d="M15 11.5h2"></path><path d="M7 16.5h2"></path><path d="M15 16.5h2"></path></svg>
+            </button>
+            
+            <button id="loopBtn" class="pip-btn" title="Loop: Off">
+                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+            </button>
+            <button id="speedBtn" class="pip-btn" title="Speed: 1x" style="font-size: 11px; font-weight: bold;">1x</button>
+            <button id="snapshot" class="pip-btn" title="Take Snapshot">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            </button>
+        </div>
     `;
 
-    // Bind Events
+    // --- Media Controls Bindings ---
     const playBtn = overlay.querySelector("#playPause");
     const updatePlayIcon = () => {
         playBtn.innerHTML = video.paused ?
-            '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>' :
-            '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>';
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>' :
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>';
     };
-
     playBtn.onclick = () => {
         if (video.paused) video.play(); else video.pause();
         updatePlayIcon();
     };
 
-    // Sync external play state
-    const onPlayPause = () => updatePlayIcon();
-    video.addEventListener('play', onPlayPause);
-    video.addEventListener('pause', onPlayPause);
-
-    // Cleanup callback
-    const cleanup = () => {
-        video.removeEventListener('play', onPlayPause);
-        video.removeEventListener('pause', onPlayPause);
-    };
-
-    // Cleanup listener on window close (handled by main cleanup, but good to be explicit if element removed)
-    // Actually, since video moves back, we might want to keep listeners? No, usually fine.
-
     overlay.querySelector("#rewind").onclick = () => video.currentTime -= 5;
     overlay.querySelector("#forward").onclick = () => video.currentTime += 5;
     overlay.querySelector("#snapshot").onclick = () => takeSnapshot(video);
 
-    // Loop
+    // --- Progress Bar ---
+    const progressSlider = overlay.querySelector("#pip-progress");
+    const timeCurrent = overlay.querySelector("#pip-time-current");
+    const timeTotal = overlay.querySelector("#pip-time-total");
+
+    let isDraggingProgress = false;
+
+    progressSlider.addEventListener('input', (e) => {
+        isDraggingProgress = true;
+        if (isFinite(video.duration)) {
+            timeCurrent.innerText = formatTime((e.target.value / 100) * video.duration);
+        }
+    });
+
+    progressSlider.addEventListener('change', (e) => {
+        if (isFinite(video.duration)) {
+            video.currentTime = (e.target.value / 100) * video.duration;
+        }
+        isDraggingProgress = false;
+    });
+
+    const onTimeUpdate = () => {
+        if (!isDraggingProgress && isFinite(video.duration) && video.duration > 0) {
+            progressSlider.value = (video.currentTime / video.duration) * 100;
+            timeCurrent.innerText = formatTime(video.currentTime);
+            timeTotal.innerText = formatTime(video.duration);
+            progressSlider.style.background = `linear-gradient(to right, var(--neon-cyan) ${progressSlider.value}%, rgba(255,255,255,0.2) ${progressSlider.value}%)`;
+        }
+    };
+
+    // --- Volume Control ---
+    const volumeSlider = overlay.querySelector("#pip-volume");
+    const muteBtn = overlay.querySelector("#muteBtn");
+
+    const updateVolumeIcon = () => {
+        muteBtn.innerHTML = video.muted || video.volume === 0 ?
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>' :
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>';
+        const pct = (video.muted ? 0 : video.volume) * 100;
+        volumeSlider.style.background = `linear-gradient(to right, var(--neon-cyan) ${pct}%, rgba(255,255,255,0.2) ${pct}%)`;
+    };
+
+    muteBtn.onclick = () => {
+        video.muted = !video.muted;
+        volumeSlider.value = video.muted ? 0 : video.volume;
+        updateVolumeIcon();
+    };
+
+    volumeSlider.addEventListener('input', (e) => {
+        video.muted = false;
+        video.volume = e.target.value;
+    });
+
+    const onVolumeChange = () => {
+        volumeSlider.value = video.muted ? 0 : video.volume;
+        updateVolumeIcon();
+    };
+
+    // --- Subtitles / CC Toggle ---
+    const ccBtn = overlay.querySelector("#ccBtn");
+    const hasTextTracks = video.textTracks && video.textTracks.length > 0;
+
+    const updateCcIconState = () => {
+        let isShowing = false;
+        if (hasTextTracks) {
+            for (let i = 0; i < video.textTracks.length; i++) {
+                if (video.textTracks[i].mode === 'showing') {
+                    isShowing = true;
+                    break;
+                }
+            }
+        } else {
+            const ytCcBtn = document.querySelector('.ytp-subtitles-button');
+            if (ytCcBtn && ytCcBtn.getAttribute('aria-pressed') === 'true') {
+                isShowing = true;
+            }
+        }
+        ccBtn.style.color = isShowing ? "var(--neon-cyan, #00f3ff)" : "inherit";
+    };
+
+    ccBtn.onclick = () => {
+        let toggled = false;
+        if (hasTextTracks) {
+            let activeFound = false;
+            for (let i = 0; i < video.textTracks.length; i++) {
+                if (video.textTracks[i].mode === 'showing') {
+                    video.textTracks[i].mode = 'hidden';
+                    activeFound = true;
+                }
+            }
+            if (!activeFound) {
+                const track = Array.from(video.textTracks).find(t => t.language.startsWith('en')) || video.textTracks[0];
+                if (track) track.mode = 'showing';
+            }
+            toggled = true;
+        } else {
+            const ytCcBtn = document.querySelector('.ytp-subtitles-button');
+            if (ytCcBtn) {
+                ytCcBtn.click();
+                toggled = true;
+            }
+        }
+
+        if (toggled) {
+            setTimeout(updateCcIconState, 100);
+            if (typeof showToast === 'function') showToast("CC Toggled 💬");
+        } else {
+            if (typeof showToast === 'function') showToast("No Subtitles Found 🚫");
+        }
+    };
+
+    // Init state
+    updatePlayIcon();
+    updateVolumeIcon();
+    onTimeUpdate();
+    setTimeout(updateCcIconState, 500);
+
+    // Bind real-time event listeners
+    const onPlayPauseEvent = () => updatePlayIcon();
+    video.addEventListener('play', onPlayPauseEvent);
+    video.addEventListener('pause', onPlayPauseEvent);
+    video.addEventListener('timeupdate', onTimeUpdate);
+    video.addEventListener('volumechange', onVolumeChange);
+
+    // Cleanup callback
+    const cleanup = () => {
+        video.removeEventListener('play', onPlayPauseEvent);
+        video.removeEventListener('pause', onPlayPauseEvent);
+        video.removeEventListener('timeupdate', onTimeUpdate);
+        video.removeEventListener('volumechange', onVolumeChange);
+    };
+
+    // --- Loop ---
     const loopBtn = overlay.querySelector("#loopBtn");
     loopBtn.style.color = video.loop ? "var(--neon-cyan, #00f3ff)" : "inherit";
     loopBtn.onclick = () => {
@@ -218,7 +360,7 @@ function createPipOverlay(video, pipWindow) {
         if (typeof showToast === 'function') showToast(`Loop: ${video.loop ? 'ON' : 'OFF'}`);
     };
 
-    // Speed
+    // --- Speed ---
     const speeds = [1, 1.25, 1.5, 2, 0.5];
     const speedBtn = overlay.querySelector("#speedBtn");
     speedBtn.onclick = () => {
@@ -228,24 +370,6 @@ function createPipOverlay(video, pipWindow) {
         video.playbackRate = newSpeed;
         speedBtn.innerText = `${newSpeed}x`;
         if (typeof showToast === 'function') showToast(`Speed: ${newSpeed}x ⏩`);
-    };
-
-    // Filter
-    const filters = [
-        { name: "None", class: "" },
-        { name: "Contrast", class: "stitch-filter-contrast" },
-        { name: "Cyber", class: "stitch-filter-cyber" },
-        { name: "Gray", class: "stitch-filter-grayscale" }
-    ];
-    let filterIndex = 0;
-    const filterBtn = overlay.querySelector("#filterBtn");
-    filterBtn.onclick = () => {
-        if (filters[filterIndex].class) video.classList.remove(filters[filterIndex].class);
-        filterIndex = (filterIndex + 1) % filters.length;
-        if (filters[filterIndex].class) video.classList.add(filters[filterIndex].class);
-
-        filterBtn.style.color = filterIndex === 0 ? "inherit" : "var(--neon-purple, #bc13fe)";
-        if (typeof showToast === 'function') showToast(`Filter: ${filters[filterIndex].name} 🎨`);
     };
 
     return { overlay, cleanup };
@@ -284,7 +408,7 @@ function takeSnapshot(video) {
             // Create link and download
             const link = document.createElement("a");
             link.href = dataURL;
-            link.download = `stitch-snapshot-${Date.now()}.png`;
+            link.download = `stitch - snapshot - ${Date.now()}.png`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);

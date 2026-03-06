@@ -76,9 +76,10 @@ Built with a **cyberpunk Stitch UI**, privacy-first design, and advanced keyboar
 - No-signal state with animated icon when no video is detected
 
 ### 🎛️ Pro Inline Playback Controls
-- **Play/Pause, Seek ±10s, Mute, Speed cycle, Loop toggle** — all usable directly from the popup
+- **Play/Pause, Seek ±10s, Mute, Speed cycle, Loop toggle** — all usable directly from the popup and Document PiP
 - **Volume slider** with live percentage display — no need to touch the page
 - **Seekable neon progress bar** with current time and duration display
+- **Subtitle / CC Toggle** — easily turn captions on/off from the PiP overlay
 - Fully synced with the actual video state in real-time
 
 ### 🧠 Smart Auto-PiP v2
@@ -249,10 +250,10 @@ npm test -- --watch
 - [x] **v3.0** — Site blocklist manager in options
 - [x] **v3.0** — 3-way Dark/Light/Auto theme
 - [x] **v3.0** — Full S.T.I.T.C.H CSS design system rewrite
+- [x] **v3.0** — Subtitle / caption controls in Document PiP overlay
 - [ ] Draggable floating window
 - [ ] Custom positioning options
 - [ ] Platform-specific enhancements (Netflix, Prime Video, etc.)
-- [ ] Subtitle / caption controls in PiP
 - [ ] Brave Web Store release
 - [ ] Multi-language support
 
