@@ -256,6 +256,7 @@ npm test -- --watch
 - [ ] Platform-specific enhancements (Netflix, Prime Video, etc.)
 - [ ] Brave Web Store release
 - [ ] Multi-language support
+- [ ] Basic analytics integration
 
 ---
 
