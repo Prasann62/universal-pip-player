@@ -431,8 +431,27 @@ function takeSnapshot(video) {
     }
 }
 
+// Bypass disablePictureInPicture restrictions (Anti-Block PiP)
+function bypassPipRestrictions(video) {
+    try {
+        if (video.hasAttribute('disablepictureinpicture')) {
+            video.removeAttribute('disablepictureinpicture');
+        }
+        
+        // Overwrite the property so scripts can't set it back to true
+        Object.defineProperty(video, 'disablePictureInPicture', {
+            get: () => false,
+            set: () => {}, // Ignore attempts to set it
+            configurable: true
+        });
+    } catch (e) {
+        console.warn("Could not bypass PiP restrictions on this video", e);
+    }
+}
+
 // Enable PiP functionality on a video element
 function enablePiP(video) {
+    bypassPipRestrictions(video);
     if (video.dataset.pipEnabled) return;
     video.dataset.pipEnabled = "true";
 

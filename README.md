@@ -90,6 +90,10 @@ Built with a **cyberpunk Stitch UI**, privacy-first design, and advanced keyboar
 - New options page section to add/remove sites where the extension is **disabled**
 - Persisted via `chrome.storage.local`
 
+### 🛡️ Anti-Block Force PiP (New)
+- Aggressively bypasses websites (like Hulu, custom players) that block PiP using the `disablePictureInPicture` attribute
+- Intercepts and overrides programmatic blocks
+
 ### 🌙 3-Way Theme: Dark / Light / Auto
 - New **Auto** mode follows your OS dark/light preference
 - Popup theme cycles Dark → Light → Auto with a single click
@@ -251,6 +255,7 @@ npm test -- --watch
 - [x] **v3.0** — 3-way Dark/Light/Auto theme
 - [x] **v3.0** — Full S.T.I.T.C.H CSS design system rewrite
 - [x] **v3.0** — Subtitle / caption controls in Document PiP overlay
+- [x] **v3.0** — Anti-Block Force PiP (Bypasses site restrictions)
 - [ ] Draggable floating window
 - [ ] Custom positioning options
 - [ ] Platform-specific enhancements (Netflix, Prime Video, etc.)
