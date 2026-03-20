@@ -246,6 +246,42 @@ function createPipOverlay(video, pipWindow) {
             timeTotal.innerText = formatTime(video.duration);
             progressSlider.style.background = `linear-gradient(to right, var(--neon-cyan) ${progressSlider.value}%, rgba(255,255,255,0.2) ${progressSlider.value}%)`;
         }
+        
+        // Render Custom Subtitles in PiP
+        if (isSubtitleOverlayActive || document.querySelector('.ytp-subtitles-button[aria-pressed="true"]')) {
+            let cueText = "";
+            let manualSubtitlesFound = false;
+            
+            // Native HTML5 textTracks
+            if (video.textTracks && video.textTracks.length > 0) {
+                for (let i = 0; i < video.textTracks.length; i++) {
+                    const track = video.textTracks[i];
+                    if (track.mode === 'showing' || track.mode === 'hidden') {
+                        manualSubtitlesFound = true;
+                        if (track.activeCues) {
+                            for (let j = 0; j < track.activeCues.length; j++) {
+                                cueText += track.activeCues[j].text + " ";
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Fallback for YouTube
+            if (!manualSubtitlesFound) {
+                const ytCapBox = document.querySelector('.caption-window, .ytp-caption-window-bottom');
+                if (ytCapBox) cueText = ytCapBox.innerText || "";
+            }
+            
+            if (cueText.trim()) {
+                subtitleText.innerText = cueText;
+                subtitleOverlay.style.display = 'block';
+            } else {
+                subtitleOverlay.style.display = 'none';
+            }
+        } else {
+            subtitleOverlay.style.display = 'none';
+        }
     };
 
     // --- Volume Control ---
@@ -276,6 +312,49 @@ function createPipOverlay(video, pipWindow) {
         updateVolumeIcon();
     };
 
+    // --- Subtitle Overlay Injection ---
+    const subtitleOverlay = document.createElement("div");
+    subtitleOverlay.id = "ai-subtitle-overlay";
+    Object.assign(subtitleOverlay.style, {
+        position: 'absolute',
+        bottom: '60px',
+        left: '0',
+        width: '100%',
+        textAlign: 'center',
+        pointerEvents: 'none',
+        zIndex: '100',
+        display: 'none',
+        transition: 'all 0.2s ease'
+    });
+    
+    const subtitleText = document.createElement("div");
+    subtitleText.id = "ai-subtitle-text";
+    Object.assign(subtitleText.style, {
+        display: 'inline-block',
+        padding: '4px 12px',
+        borderRadius: '6px',
+        fontFamily: 'Outfit, sans-serif',
+        textShadow: '0px 1px 4px rgba(0,0,0,0.8)',
+        maxWidth: '90%',
+        wordWrap: 'break-word',
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        color: '#ffffff',
+        fontSize: '14px'
+    });
+    subtitleOverlay.appendChild(subtitleText);
+    overlay.appendChild(subtitleOverlay);
+
+    // Apply custom settings
+    chrome.storage.local.get(['subtitleSize', 'subtitleColor'], (result) => {
+        const sSize = result.subtitleSize || 'medium';
+        subtitleText.style.color = result.subtitleColor || '#ffffff';
+        if (sSize === 'small') subtitleText.style.fontSize = '12px';
+        else if (sSize === 'large') subtitleText.style.fontSize = '18px';
+        else if (sSize === 'xlarge') subtitleText.style.fontSize = '22px';
+    });
+
+    let isSubtitleOverlayActive = false;
+
     // --- Subtitles / CC Toggle ---
     const ccBtn = overlay.querySelector("#ccBtn");
     const hasTextTracks = video.textTracks && video.textTracks.length > 0;
@@ -303,20 +382,31 @@ function createPipOverlay(video, pipWindow) {
         if (hasTextTracks) {
             let activeFound = false;
             for (let i = 0; i < video.textTracks.length; i++) {
-                if (video.textTracks[i].mode === 'showing') {
-                    video.textTracks[i].mode = 'hidden';
+                if (video.textTracks[i].mode === 'showing' || video.textTracks[i].mode === 'hidden') {
+                    if (isSubtitleOverlayActive) {
+                        video.textTracks[i].mode = 'disabled';
+                        isSubtitleOverlayActive = false;
+                    } else {
+                        video.textTracks[i].mode = 'hidden'; 
+                        isSubtitleOverlayActive = true;
+                    }
                     activeFound = true;
+                    toggled = true;
                 }
             }
-            if (!activeFound) {
-                const track = Array.from(video.textTracks).find(t => t.language.startsWith('en')) || video.textTracks[0];
-                if (track) track.mode = 'showing';
+            if (!activeFound && !isSubtitleOverlayActive) {
+                const track = Array.from(video.textTracks).find(t => t.language && t.language.startsWith('en')) || video.textTracks[0];
+                if (track) {
+                    track.mode = 'hidden'; // Hidden keeps activeCues firing but suppresses native browser rendering
+                    isSubtitleOverlayActive = true;
+                    toggled = true;
+                }
             }
-            toggled = true;
         } else {
             const ytCcBtn = document.querySelector('.ytp-subtitles-button');
             if (ytCcBtn) {
                 ytCcBtn.click();
+                isSubtitleOverlayActive = ytCcBtn.getAttribute('aria-pressed') === 'true';
                 toggled = true;
             }
         }

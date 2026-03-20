@@ -12,7 +12,7 @@ let blocklist = [];
 
 // ── LOAD SETTINGS ──
 function loadSettings() {
-    chrome.storage.local.get(['playerSize', 'autoPipEnabled', 'theme', 'blocklist'], (result) => {
+    chrome.storage.local.get(['playerSize', 'autoPipEnabled', 'theme', 'blocklist', 'subtitleSize', 'subtitleColor'], (result) => {
         // Size
         const sizeEl = document.getElementById('defaultSize');
         if (sizeEl) sizeEl.value = result.playerSize || 'medium';
@@ -24,6 +24,13 @@ function loadSettings() {
         // Theme
         const themeEl = document.getElementById('defaultTheme');
         if (themeEl) themeEl.value = result.theme || 'dark';
+
+        // Subtitles
+        const subtitleSizeEl = document.getElementById('subtitleSize');
+        if (subtitleSizeEl) subtitleSizeEl.value = result.subtitleSize || 'medium';
+
+        const subtitleColorEl = document.getElementById('subtitleColor');
+        if (subtitleColorEl) subtitleColorEl.value = result.subtitleColor || '#ffffff';
 
         // Blocklist
         blocklist = result.blocklist || [];
@@ -80,8 +87,10 @@ saveBtn.addEventListener('click', () => {
     const size = document.getElementById('defaultSize')?.value || 'medium';
     const autoPip = document.getElementById('autoPip')?.checked || false;
     const theme = document.getElementById('defaultTheme')?.value || 'dark';
+    const subtitleSize = document.getElementById('subtitleSize')?.value || 'medium';
+    const subtitleColor = document.getElementById('subtitleColor')?.value || '#ffffff';
 
-    chrome.storage.local.set({ playerSize: size, autoPipEnabled: autoPip, theme, blocklist }, () => {
+    chrome.storage.local.set({ playerSize: size, autoPipEnabled: autoPip, theme, blocklist, subtitleSize, subtitleColor }, () => {
         statusDiv.textContent = '✓ SETTINGS SAVED';
         statusDiv.style.color = 'var(--success)';
         setTimeout(() => { statusDiv.textContent = ''; }, 2500);
