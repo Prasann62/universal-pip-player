@@ -1,0 +1,94 @@
+{
+    "manifest_version": 3,
+    "name": "Mini Player & PiP",
+    "version": "3.0.0",
+    "description": "Mini player and Picture-in-Picture for any website",
+    "permissions": [
+        "scripting",
+        "activeTab",
+        "contextMenus",
+        "storage",
+        "tabs"
+    ],
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "pip.webp",
+            "48": "pip.webp",
+            "128": "pip.webp"
+        }
+    },
+    "options_ui": {
+        "page": "options.html",
+        "open_in_tab": true
+    },
+    "icons": {
+        "16": "pip.webp",
+        "48": "pip.webp",
+        "128": "pip.webp"
+    },
+    "background": {
+        "scripts": ["background.js"]
+    },
+    "commands": {
+        "toggle-pip": {
+            "suggested_key": {
+                "default": "Alt+P"
+            },
+            "description": "Toggle Picture-in-Picture"
+        },
+        "close-pip": {
+            "suggested_key": {
+                "default": "Alt+X"
+            },
+            "description": "Close Picture-in-Picture"
+        }
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "content/config.js",
+                "content/utils.js",
+                "content/pip.js",
+                "content/ui.js",
+                "content/controls.js",
+                "content/main.js"
+            ],
+            "css": [
+                "content/styles.css"
+            ],
+            "all_frames": true
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "pip.webp"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        },
+        {
+            "resources": [
+                "stitch.css",
+                "content/styles.css"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
+    ],
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "stitch-pip@prasanna.kumar",
+            "strict_min_version": "109.0"
+        }
+    }
+}

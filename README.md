@@ -262,7 +262,7 @@ npm test -- --watch
 - [ ] Brave Web Store release
 - [ ] Multi-language support
 - [ ] Basic analytics integration
-- [ ] Advanced subtitle customization (font, color, size)
+- [x] Advanced subtitle customization (font, color, size)
 - [ ] Firefox compatibility layer
 
 ---
