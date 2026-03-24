@@ -264,6 +264,7 @@ npm test -- --watch
 - [ ] Basic analytics integration
 - [x] Advanced subtitle customization (font, color, size)
 - [ ] Firefox compatibility layer
+- [ ] Add more themes
 
 ---
 
