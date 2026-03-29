@@ -1,6 +1,6 @@
 {
   "name": "extenction",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A powerful Brave/Chrome extension that enables Mini Player and Picture-in-Picture (PiP) for videos on any website with advanced controls and keyboard shortcuts.",
   "main": "background.js",
   "scripts": {
