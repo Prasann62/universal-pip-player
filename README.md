@@ -256,8 +256,8 @@ npm test -- --watch
 - [x] **v3.0** — Full S.T.I.T.C.H CSS design system rewrite
 - [x] **v3.0** — Subtitle / caption controls in Document PiP overlay
 - [x] **v3.0** — Anti-Block Force PiP (Bypasses site restrictions)
-- [ ] Draggable floating window
-- [ ] Custom positioning options
+- [x] Draggable floating window
+- [x] Custom positioning options
 - [ ] Platform-specific enhancements (Netflix, Prime Video, etc.)
 - [ ] Brave Web Store release
 - [ ] Multi-language support

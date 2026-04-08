@@ -110,14 +110,18 @@
 /* Floating Mode (Fallback) */
 .stitch-floating-video {
     position: fixed !important;
-    bottom: 20px !important;
-    right: 20px !important;
     z-index: 2147483647 !important;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 243, 255, 0.2), 0 0 20px rgba(0, 243, 255, 0.1) !important;
     border-radius: 12px !important;
     border: 1px solid rgba(0, 243, 255, 0.3) !important;
     object-fit: cover !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: grab !important;
+}
+
+.stitch-dragging {
+    cursor: grabbing !important;
+    transition: none !important; /* Disable transition during drag for smoothness */
 }
 
 .stitch-floating-close-btn {

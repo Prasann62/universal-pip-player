@@ -635,8 +635,25 @@ window.togglePiP = togglePiP;
 // ==========================================
 let isFloating = false;
 let floatOriginalStyle = "";
-let floatOriginalParent = null; // Unused for basic float, used if we move it
 let floatCloseBtn = null;
+
+// Dragging state
+let isDraggingFallback = false;
+let dragStartX = 0;
+let dragStartY = 0;
+let initialVideoLeft = 0;
+let initialVideoTop = 0;
+let fallbackMouseDownHandler = null;
+let fallbackMouseMoveHandler = null;
+let fallbackMouseUpHandler = null;
+
+function updateCloseBtnPosition(video) {
+    if (!floatCloseBtn || video.dataset.isFloating !== "true") return;
+    const rect = video.getBoundingClientRect();
+    // Position at top right corner
+    floatCloseBtn.style.left = (rect.right - 14) + "px";
+    floatCloseBtn.style.top = (rect.top - 14) + "px";
+}
 
 function toggleFloatingMode(video) {
     if (video.dataset.isFloating === "true") {
@@ -648,8 +665,8 @@ function toggleFloatingMode(video) {
     floatOriginalStyle = video.getAttribute("style") || "";
     video.dataset.isFloating = "true";
 
-    // Get size settings
-    chrome.storage.local.get(['playerSize'], (result) => {
+    // Get size settings and saved position
+    chrome.storage.local.get(['playerSize', 'floatingPos'], (result) => {
         const sizeMode = result.playerSize || 'medium';
         let width = "380px";
         let height = "175px";
@@ -662,22 +679,86 @@ function toggleFloatingMode(video) {
         video.style.width = width;
         video.style.height = height;
 
-        // Create Close Button (Adjust position based on size)
+        // Apply saved position or default to bottom right
+        if (result.floatingPos) {
+            video.style.left = result.floatingPos.left + "px";
+            video.style.top = result.floatingPos.top + "px";
+        } else {
+            video.style.left = (window.innerWidth - parseInt(width) - 20) + "px";
+            video.style.top = (window.innerHeight - parseInt(height) - 20) + "px";
+        }
+
+        // Create Close Button
         if (!floatCloseBtn) {
             floatCloseBtn = document.createElement("button");
             floatCloseBtn.innerHTML = "×";
             floatCloseBtn.className = "stitch-floating-close-btn";
-
             floatCloseBtn.onclick = () => disableFloatingMode(video);
             document.body.appendChild(floatCloseBtn);
         }
 
-        // Adjust button position dynamically
         floatCloseBtn.style.display = "flex";
-        floatCloseBtn.style.right = "25px";
-        // Bottom = Video Bottom (20) + Video Height (height in px) - 12 (half button)
-        const hVal = parseInt(height.replace("px", ""));
-        floatCloseBtn.style.bottom = (20 + hVal - 12) + "px";
+        
+        // Wait a frame for layout to render then position button
+        requestAnimationFrame(() => {
+            updateCloseBtnPosition(video);
+        });
+
+        // Initialize drag listeners
+        fallbackMouseDownHandler = (e) => {
+            if (e.button !== 0) return; // Only left click
+            e.preventDefault(); // Prevent default text selection during drag
+            isDraggingFallback = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            
+            const rect = video.getBoundingClientRect();
+            initialVideoLeft = rect.left;
+            initialVideoTop = rect.top;
+
+            video.classList.add("stitch-dragging");
+        };
+
+        fallbackMouseMoveHandler = (e) => {
+            if (!isDraggingFallback) return;
+            e.preventDefault();
+            
+            const dx = e.clientX - dragStartX;
+            const dy = e.clientY - dragStartY;
+            
+            let newLeft = initialVideoLeft + dx;
+            let newTop = initialVideoTop + dy;
+
+            // Constrain to window bounds
+            const maxLeft = window.innerWidth - video.offsetWidth;
+            const maxTop = window.innerHeight - window.innerHeight * 0.05; // allow going slightly off bottom, but standard height
+            // Actually video.offsetHeight should be accurate.
+            
+            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+            newTop = Math.max(0, Math.min(newTop, window.innerHeight - video.offsetHeight));
+
+            video.style.left = newLeft + "px";
+            video.style.top = newTop + "px";
+            
+            updateCloseBtnPosition(video);
+        };
+
+        fallbackMouseUpHandler = (e) => {
+            if (isDraggingFallback) {
+                isDraggingFallback = false;
+                video.classList.remove("stitch-dragging");
+                
+                // Save position
+                const rect = video.getBoundingClientRect();
+                chrome.storage.local.set({
+                    floatingPos: { left: rect.left, top: rect.top }
+                });
+            }
+        };
+
+        video.addEventListener('mousedown', fallbackMouseDownHandler);
+        window.addEventListener('mousemove', fallbackMouseMoveHandler);
+        window.addEventListener('mouseup', fallbackMouseUpHandler);
     });
 
     showToast("Floating Mode (Fallback) 🎈", "info");
@@ -686,9 +767,20 @@ function toggleFloatingMode(video) {
 function disableFloatingMode(video) {
     if (video.dataset.isFloating !== "true") return;
 
+    // Remove drag listeners
+    if (fallbackMouseDownHandler) video.removeEventListener('mousedown', fallbackMouseDownHandler);
+    if (fallbackMouseMoveHandler) window.removeEventListener('mousemove', fallbackMouseMoveHandler);
+    if (fallbackMouseUpHandler) window.removeEventListener('mouseup', fallbackMouseUpHandler);
+    
+    fallbackMouseDownHandler = null;
+    fallbackMouseMoveHandler = null;
+    fallbackMouseUpHandler = null;
+    isDraggingFallback = false;
+
     // Restore
     video.setAttribute("style", floatOriginalStyle);
     video.classList.remove("stitch-floating-video");
+    video.classList.remove("stitch-dragging");
     delete video.dataset.isFloating;
 
     if (floatCloseBtn) {
@@ -749,11 +841,27 @@ function updateFloatingSize(sizeMode) {
         activeVideo.style.width = width;
         activeVideo.style.height = height;
 
+        // Make sure it doesn't overflow window with new size
+        const rect = activeVideo.getBoundingClientRect();
+        const maxLeft = window.innerWidth - parseInt(width);
+        const maxTop = window.innerHeight - parseInt(height);
+        
+        let newLeft = Math.min(rect.left, maxLeft);
+        let newTop = Math.min(rect.top, maxTop);
+        
+        newLeft = Math.max(0, newLeft);
+        newTop = Math.max(0, newTop);
+
+        activeVideo.style.left = newLeft + "px";
+        activeVideo.style.top = newTop + "px";
+
         // Update close button position
-        if (floatCloseBtn) {
-            const hVal = parseInt(height.replace("px", ""));
-            floatCloseBtn.style.bottom = (20 + hVal - 12) + "px";
-        }
+        setTimeout(() => updateCloseBtnPosition(activeVideo), 50);
+
+        // Save position
+        chrome.storage.local.set({
+            floatingPos: { left: newLeft, top: newTop }
+        });
 
         // Show feedback
         if (typeof showToast === 'function') {
